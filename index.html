@@ -99,7 +99,7 @@
   .filter-section { padding: 0.4rem 1.2rem; display: flex; flex-direction: column; gap: 0.6rem; flex-shrink: 0; z-index: 5; }
   .search-box { display: flex; align-items: center; padding: 0 0.8rem; height: 40px; border-radius: var(--radius-md); position: relative; }
   .search-icon { margin-right: 0.5rem; opacity: .6; flex-shrink: 0; }
-  .search-box input { flex-grow: 1; background: transparent; border: none; color: var(--text-primary); font-family: var(--font-body); font-size: 0.88rem; outline: none; height: 100%; }
+  .search-box input { flex-grow: 1; background: transparent; border: none; color: var(--text-primary); font-family: var(--font-body); font-size: 16px; outline: none; height: 100%; }
   .search-box input::placeholder { color: var(--text-secondary); opacity: 0.6; }
   .clear-input-btn { background: transparent; border: none; color: var(--text-secondary); font-size: 1.1rem; cursor: pointer; padding: 0 0.2rem; }
   .clear-input-btn.hidden { display: none; }
@@ -139,13 +139,13 @@
   .item-card.checked .item-title { font-weight: 700; color: var(--accent); }
 
   /* Qty field (carried over from your original site) */
-  .qty { display: none; width: 80px; flex: none; text-align: right; font-size: 0.78rem; font-weight: 600; color: var(--accent); background: var(--field-bg); border: 1px solid var(--item-selected-border); border-radius: var(--radius-sm); padding: 6px 8px; outline: none; font-family: var(--font-body); }
+  .qty { display: none; width: 88px; flex: none; text-align: right; font-size: 16px; font-weight: 600; color: var(--accent); background: var(--field-bg); border: 1px solid var(--item-selected-border); border-radius: var(--radius-sm); padding: 6px 8px; outline: none; font-family: var(--font-body); }
   .item-card.checked .qty { display: block; }
   .qty::placeholder { color: var(--text-secondary); opacity: .7; font-weight: 500; }
 
   /* Other items (carried over) */
   .other-add { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
-  .other-add input { flex: 1; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 0.7rem 0.9rem; color: var(--text-primary); font-family: var(--font-body); font-size: 0.9rem; outline: none; }
+  .other-add input { flex: 1; min-width: 0; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 0.7rem 0.9rem; color: var(--text-primary); font-family: var(--font-body); font-size: 16px; outline: none; }
   .other-add input:focus { border-color: var(--item-selected-border); }
   .other-add button { width: 44px; border: none; background: var(--accent); color: #fff; border-radius: var(--radius-md); font-size: 1.3rem; cursor: pointer; flex: none; transition: var(--transition-fast); }
   .other-add button:active { transform: scale(0.94); }
