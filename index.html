@@ -3,296 +3,506 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#059669">
+  <meta name="description" content="Kitchen shopping checklist — tick items from your master list and share instantly to WhatsApp.">
+  <meta name="theme-color" content="#10b981">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Kitchen List</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9B%92%3C/text%3E%3C/svg%3E">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; background: #f3f4f6; }
+  :root {
+    --font-display: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+    --accent-h: 161; --accent-s: 84%; --accent-l: 48%;
+    --accent: hsl(var(--accent-h), var(--accent-s), var(--accent-l));
+    --accent-glow: hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.3);
+    --whatsapp-green: #25d366;
+    --whatsapp-green-hover: #128c7e;
+
+    --radius-sm: 8px; --radius-md: 14px; --radius-lg: 22px; --radius-round: 50%;
+    --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* DEFAULT DARK MODE */
+    --bg-app: #0b0f19;
+    --bg-gradient: linear-gradient(180deg, #0b0f19 0%, #0f172a 100%);
+    --text-primary: #f8fafc;
+    --text-secondary: #94a3b8;
+    --text-muted: #475569;
+    --glass-bg: rgba(15, 23, 42, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.05);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+    --card-bg: rgba(30, 41, 59, 0.3);
+    --card-border: rgba(255, 255, 255, 0.03);
+    --item-selected-bg: rgba(16, 185, 129, 0.12);
+    --item-selected-border: rgba(16, 185, 129, 0.35);
+    --item-selected-glow: rgba(16, 185, 129, 0.1);
+    --field-bg: rgba(255, 255, 255, 0.04);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.12);
+  }
+  body.light-mode {
+    --bg-app: #f8fafc;
+    --bg-gradient: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #cbd5e1;
+    --glass-bg: rgba(255, 255, 255, 0.78);
+    --glass-border: rgba(15, 23, 42, 0.06);
+    --glass-shadow: 0 8px 32px 0 rgba(148, 163, 184, 0.12);
+    --card-bg: rgba(255, 255, 255, 0.6);
+    --card-border: rgba(15, 23, 42, 0.04);
+    --item-selected-bg: rgba(16, 185, 129, 0.08);
+    --item-selected-border: rgba(16, 185, 129, 0.4);
+    --item-selected-glow: rgba(16, 185, 129, 0.05);
+    --field-bg: rgba(15, 23, 42, 0.03);
+    --shadow-sm: 0 2px 8px rgba(148, 163, 184, 0.05);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { width: 100%; height: 100%; font-family: var(--font-body); background-color: var(--bg-app); color: var(--text-primary); overflow: hidden; font-size: 16px; line-height: 1.5; }
+  body { background: var(--bg-gradient); display: flex; justify-content: center; align-items: center; }
+
+  .app-container { width: 100%; max-width: 480px; height: 100dvh; display: flex; flex-direction: column; position: relative; overflow: hidden; box-shadow: 0 0 40px rgba(0,0,0,.35); border-left: 1px solid var(--glass-border); border-right: 1px solid var(--glass-border); }
+  @media (min-width: 481px) { .app-container { height: 94vh; border-radius: var(--radius-lg); border: 1px solid var(--glass-border); } }
+
+  h1, h3 { font-family: var(--font-display); font-weight: 700; }
+  .glass { background: var(--glass-bg); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 10px; }
+
+  /* Header */
+  .app-header { padding: 1.2rem 1.2rem 0.8rem; background: linear-gradient(to bottom, var(--bg-app) 75%, transparent 100%); z-index: 10; flex-shrink: 0; }
+  .header-top { display: flex; justify-content: space-between; align-items: center; }
+  .logo-area { display: flex; align-items: center; gap: 0.6rem; }
+  .logo-icon { width: 34px; height: 34px; border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--accent) 0%, #14b8a6 100%); color: #fff; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px var(--accent-glow); font-size: 18px; }
+  .logo-text-wrapper { display: flex; flex-direction: column; }
+  .logo-text-wrapper h1 { font-size: 1.3rem; letter-spacing: -0.5px; line-height: 1.1; background: linear-gradient(to right, var(--text-primary), var(--accent)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .logo-subtitle { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-secondary); opacity: 0.85; }
+  .header-actions { display: flex; gap: 0.5rem; }
+  .icon-btn { width: 36px; height: 36px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-secondary); display: flex; justify-content: center; align-items: center; cursor: pointer; transition: var(--transition-fast); font-size: 16px; }
+  .icon-btn:active { transform: scale(0.9); }
+  .icon-btn.danger:hover { color: #ef4444; border-color: rgba(239,68,68,.2); background: rgba(239,68,68,.05); }
+  #theme-toggle .moon { display: inline; } #theme-toggle .sun { display: none; }
+  body.light-mode #theme-toggle .moon { display: none; } body.light-mode #theme-toggle .sun { display: inline; }
+
+  /* Search + filters */
+  .filter-section { padding: 0.4rem 1.2rem; display: flex; flex-direction: column; gap: 0.6rem; flex-shrink: 0; z-index: 5; }
+  .search-box { display: flex; align-items: center; padding: 0 0.8rem; height: 40px; border-radius: var(--radius-md); position: relative; }
+  .search-icon { margin-right: 0.5rem; opacity: .6; flex-shrink: 0; }
+  .search-box input { flex-grow: 1; background: transparent; border: none; color: var(--text-primary); font-family: var(--font-body); font-size: 0.88rem; outline: none; height: 100%; }
+  .search-box input::placeholder { color: var(--text-secondary); opacity: 0.6; }
+  .clear-input-btn { background: transparent; border: none; color: var(--text-secondary); font-size: 1.1rem; cursor: pointer; padding: 0 0.2rem; }
+  .clear-input-btn.hidden { display: none; }
+  .category-filters-container { overflow-x: auto; scrollbar-width: none; }
+  .category-filters-container::-webkit-scrollbar { display: none; }
+  .category-filters { display: flex; gap: 0.4rem; padding: 0.1rem 0; }
+  .filter-pill { padding: 0.35rem 0.8rem; border-radius: 12px; font-size: 0.72rem; font-weight: 600; border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-secondary); cursor: pointer; transition: var(--transition-fast); white-space: nowrap; }
+  .filter-pill.active { background: var(--text-primary); color: var(--bg-app); border-color: var(--text-primary); }
+
+  /* List */
+  .list-scroll-area { flex-grow: 1; overflow-y: auto; padding: 0.5rem 1.2rem 8rem; scroll-behavior: smooth; position: relative; }
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 4rem 1.5rem; color: var(--text-secondary); }
+  .empty-state.hidden { display: none; }
+  .empty-illustration { font-size: 3rem; margin-bottom: 0.8rem; opacity: 0.6; animation: float 4s ease-in-out infinite; }
+  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  .empty-state h3 { font-size: 1.05rem; margin-bottom: 0.3rem; color: var(--text-primary); }
+  .empty-state p { font-size: 0.82rem; max-width: 250px; opacity: 0.75; }
+
+  .category-group { margin-bottom: 1rem; }
+  .category-group.hidden { display: none; }
+  .category-header { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0.2rem; margin-bottom: 0.4rem; }
+  .category-title-wrapper { display: flex; align-items: center; gap: 0.4rem; }
+  .category-badge-dot { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 8px currentColor; }
+  .category-title { font-family: var(--font-display); font-weight: 600; font-size: 0.8rem; letter-spacing: 0.5px; text-transform: uppercase; }
+  .category-count { font-size: 0.72rem; color: var(--text-secondary); opacity: 0.7; font-weight: 600; }
+  .category-items-container { display: grid; grid-template-columns: 1fr; gap: 0.5rem; }
+
+  .item-card { display: flex; align-items: center; justify-content: space-between; gap: 0.6rem; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 0.7rem 0.9rem; cursor: pointer; user-select: none; box-shadow: var(--shadow-sm); transition: all var(--transition-normal), transform var(--transition-bounce); animation: itemEntrance 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+  @keyframes itemEntrance { from { opacity: 0; transform: translateY(10px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .item-card:hover { border-color: var(--glass-border); }
+  .item-left { display: flex; align-items: center; gap: 0.7rem; min-width: 0; flex: 1; }
+  .checkbox-btn { width: 20px; height: 20px; border-radius: var(--radius-round); border: 2px solid var(--text-secondary); background: transparent; display: flex; justify-content: center; align-items: center; flex-shrink: 0; transition: all var(--transition-bounce); color: transparent; font-size: 12px; font-weight: 700; }
+  .item-card:hover .checkbox-btn { border-color: var(--accent); }
+  .item-title { font-weight: 550; font-size: 0.92rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: var(--transition-fast); }
+  .item-card.checked { background: var(--item-selected-bg); border-color: var(--item-selected-border); box-shadow: 0 4px 12px var(--item-selected-glow); }
+  .item-card.checked .checkbox-btn { background: var(--accent); border-color: var(--accent); color: #fff; transform: scale(1.08); }
+  .item-card.checked .item-title { font-weight: 700; color: var(--accent); }
+
+  /* Qty field (carried over from your original site) */
+  .qty { display: none; width: 80px; flex: none; text-align: right; font-size: 0.78rem; font-weight: 600; color: var(--accent); background: var(--field-bg); border: 1px solid var(--item-selected-border); border-radius: var(--radius-sm); padding: 6px 8px; outline: none; font-family: var(--font-body); }
+  .item-card.checked .qty { display: block; }
+  .qty::placeholder { color: var(--text-secondary); opacity: .7; font-weight: 500; }
+
+  /* Other items (carried over) */
+  .other-add { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+  .other-add input { flex: 1; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--radius-md); padding: 0.7rem 0.9rem; color: var(--text-primary); font-family: var(--font-body); font-size: 0.9rem; outline: none; }
+  .other-add input:focus { border-color: var(--item-selected-border); }
+  .other-add button { width: 44px; border: none; background: var(--accent); color: #fff; border-radius: var(--radius-md); font-size: 1.3rem; cursor: pointer; flex: none; transition: var(--transition-fast); }
+  .other-add button:active { transform: scale(0.94); }
+  .ex-del { border: none; background: transparent; color: #ef4444; font-size: 1rem; cursor: pointer; padding: 4px 6px; flex: none; }
+
+  /* Bottom action bar */
+  .app-bottom-nav { position: absolute; bottom: 0; left: 0; width: 100%; padding-bottom: env(safe-area-inset-bottom); background: linear-gradient(to top, var(--bg-app) 78%, transparent 100%); z-index: 15; }
+  .bottom-action-panel { display: flex; flex-direction: column; gap: 0.6rem; padding: 0.8rem 1.2rem; margin: 0.2rem 1rem 1rem; border-radius: var(--radius-lg); }
+  .selected-summary { display: flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-secondary); }
+  .selected-count { background: var(--accent); color: #fff; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; display: inline-flex; justify-content: center; align-items: center; font-size: 0.65rem; box-shadow: 0 2px 6px var(--accent-glow); }
+  .button-action-group { display: flex; gap: 0.6rem; width: 100%; }
+  .btn { height: 44px; border-radius: var(--radius-md); border: none; font-family: var(--font-display); font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: var(--transition-fast); display: inline-flex; justify-content: center; align-items: center; gap: 0.4rem; padding: 0 1rem; }
+  .btn:active { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .btn-secondary { background: var(--field-bg); color: var(--text-primary); border: 1px solid var(--glass-border); flex-shrink: 0; }
+  .btn-primary { background: var(--whatsapp-green); color: #fff; flex-grow: 1; box-shadow: 0 4px 14px rgba(37,211,102,.35); }
+  .btn-primary:hover:not(:disabled) { background: var(--whatsapp-green-hover); }
+
+  .loading-spinner { width: 28px; height: 28px; border: 3px solid var(--glass-border); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 0.8rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Toasts */
+  .toast-container { position: fixed; top: 1.2rem; left: 50%; transform: translateX(-50%); z-index: 1000; width: 88%; max-width: 360px; display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none; }
+  .toast { padding: 0.7rem 1.1rem; border-radius: var(--radius-md); font-size: 0.82rem; font-weight: 600; display: flex; align-items: center; pointer-events: auto; box-shadow: 0 10px 25px rgba(0,0,0,.3); animation: toastEntrance 0.3s cubic-bezier(0.175,0.885,0.32,1.275) forwards; transition: all 0.3s ease; }
+  @keyframes toastEntrance { from { opacity: 0; transform: translateY(-16px) scale(0.92); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .toast.success { background: #064e3b; border: 1px solid #059669; color: #a7f3d0; }
+  body.light-mode .toast.success { background: #ecfdf5; border: 1px solid #10b981; color: #065f46; }
+  .toast.info { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; }
+  body.light-mode .toast.info { background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; }
   </style>
 </head>
 <body>
-<div id="app">
-  <div id="header">
-    <div id="titlebar"><span class="cart">🛒</span> Kitchen List</div>
-    <div id="searchbar">
-      <span class="sicon">🔍</span>
-      <input id="search" placeholder="Search items…" autocomplete="off">
-      <span id="clearsearch">✕</span>
-    </div>
-  </div>
-
-  <div id="scroll">
-    <div id="list"></div>
-    <div id="extrasCard" class="cat">
-      <div class="cathead static"><span class="cemoji">✏️</span><span class="cname">Other items</span><span class="badge" id="exbadge" style="display:none">0</span></div>
-      <div class="catbody open">
-        <div id="exlist"></div>
-        <div class="exadd">
-          <input id="exdraft" placeholder="Add something not on the list…" autocomplete="off">
-          <button id="exaddbtn">+</button>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-top">
+        <div class="logo-area">
+          <div class="logo-icon">🛒</div>
+          <div class="logo-text-wrapper">
+            <h1>Kitchen List</h1>
+            <p class="logo-subtitle">Master Shopping List</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button id="clear-all-btn" class="icon-btn danger" aria-label="Clear all" title="Clear all">🗑️</button>
+          <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme" title="Toggle theme"><span class="moon">🌙</span><span class="sun">☀️</span></button>
         </div>
       </div>
-    </div>
-  </div>
+    </header>
 
-  <div id="bottombar"><button id="sharebtn" disabled>Review &amp; Share</button></div>
-
-  <div id="overlay">
-    <div id="sheet">
-      <div id="sheethead"><span id="sheettitle">Shopping List</span><button id="closebtn">✕</button></div>
-      <div id="preview"></div>
-      <div id="sheetfoot">
-        <button id="sendbtn">Send to WhatsApp</button>
-        <div class="footrow">
-          <button id="copybtn" class="ghost">Copy</button>
-          <button id="clearbtn" class="danger">Clear</button>
+    <section class="filter-section">
+      <div class="search-box glass">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search items…" autocomplete="off">
+        <button id="search-clear-btn" class="clear-input-btn hidden">&times;</button>
+      </div>
+      <div class="category-filters-container">
+        <div id="category-filters" class="category-filters">
+          <button class="filter-pill active" data-category="all">All Items</button>
         </div>
       </div>
-    </div>
+    </section>
+
+    <main class="list-scroll-area" id="list-scroll-area">
+      <div id="loading-state" class="empty-state">
+        <div class="loading-spinner"></div>
+        <p>Loading master list…</p>
+      </div>
+      <div id="empty-state" class="empty-state hidden">
+        <div class="empty-illustration">🛍️</div>
+        <h3>No matching items</h3>
+        <p>Nothing matches your search or filter.</p>
+      </div>
+      <div id="shopping-list-groups" class="hidden"></div>
+    </main>
+
+    <nav class="app-bottom-nav">
+      <div class="bottom-action-panel glass">
+        <div class="selected-summary">
+          <span class="selected-count" id="selected-count-label">0</span>
+          <span>items selected</span>
+        </div>
+        <div class="button-action-group">
+          <button id="copy-list-btn" class="btn btn-secondary" title="Copy list">📄 Copy</button>
+          <button id="whatsapp-share-btn" class="btn btn-primary" disabled>💬 Share to WhatsApp</button>
+        </div>
+      </div>
+    </nav>
   </div>
-</div>
 
-<style>
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  #app {
-    position: relative; height: 100vh; max-width: 430px; margin: 0 auto;
-    display: flex; flex-direction: column; background: #f3f4f6; overflow: hidden;
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #111827;
-  }
-  #header { background: #059669; color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.15); z-index: 5; }
-  #titlebar { font-size: 18px; font-weight: 700; padding: 16px 16px 10px; display: flex; align-items: center; gap: 8px; }
-  #searchbar { display: flex; align-items: center; gap: 8px; margin: 0 16px 12px; background: rgba(255,255,255,.22); border-radius: 12px; padding: 9px 12px; }
-  #searchbar .sicon { font-size: 14px; opacity: .9; }
-  #search { flex: 1; border: 0; background: transparent; outline: none; color: #fff; font-size: 15px; }
-  #search::placeholder { color: #d1fae5; }
-  #clearsearch { color: #d1fae5; font-size: 14px; display: none; padding: 2px 4px; }
-  #scroll { flex: 1; overflow-y: auto; padding: 12px; -webkit-overflow-scrolling: touch; }
-  .cat { background: #fff; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; overflow: hidden; }
-  .cathead { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: transparent; padding: 12px; text-align: left; cursor: pointer; font: inherit; }
-  .chev { color: #9ca3af; font-size: 13px; transition: transform .15s; width: 14px; }
-  .cat.collapsed .chev { transform: rotate(-90deg); }
-  .cat.collapsed .catbody:not(.open) { display: none; }
-  .cathead.static { cursor: default; }
-  .cemoji { font-size: 19px; }
-  .cname { font-weight: 600; font-size: 14px; color: #1f2937; }
-  .badge { margin-left: 2px; font-size: 11px; font-weight: 700; background: #d1fae5; color: #047857; border-radius: 999px; padding: 2px 8px; }
-  .catbody { padding: 0 8px 8px; }
-  .searching .catbody { display: block !important; }
-  .searching .chev { visibility: hidden; }
-  .item { display: flex; align-items: center; gap: 8px; border-radius: 12px; padding: 0 8px; }
-  .item.checked { background: #ecfdf5; }
-  .tick { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; padding: 12px 0; cursor: pointer; }
-  .circle { width: 24px; height: 24px; border-radius: 999px; border: 2px solid #d1d5db; flex: none; display: flex; align-items: center; justify-content: center; }
-  .item.checked .circle { background: #10b981; border-color: #10b981; }
-  .item.checked .circle::after { content: "✓"; color: #fff; font-size: 14px; font-weight: 700; line-height: 1; }
-  .iname { font-size: 14px; color: #374151; }
-  .item.checked .iname { color: #065f46; font-weight: 600; }
-  .qty { display: none; width: 78px; flex: none; text-align: right; font-size: 12px; color: #065f46; background: #fff; border: 1px solid #a7f3d0; border-radius: 9px; padding: 7px 8px; outline: none; }
-  .qty:focus { border-color: #10b981; }
-  .item.checked .qty { display: block; }
-  .exdel { border: 0; background: transparent; color: #ef4444; font-size: 15px; padding: 6px; cursor: pointer; }
-  .exadd { display: flex; align-items: center; gap: 8px; padding: 6px 8px 4px; }
-  .exadd input { flex: 1; border: 1px solid #e5e7eb; border-radius: 9px; padding: 9px 10px; font-size: 14px; outline: none; }
-  .exadd input:focus { border-color: #10b981; }
-  #exaddbtn { border: 0; background: #10b981; color: #fff; width: 38px; height: 38px; border-radius: 9px; font-size: 20px; cursor: pointer; flex: none; }
-  #bottombar { padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: linear-gradient(transparent, #f3f4f6 30%); }
-  #sharebtn { width: 100%; border: 0; border-radius: 16px; padding: 16px; font-size: 16px; font-weight: 700; color: #fff; background: #059669; box-shadow: 0 4px 12px rgba(5,150,105,.3); cursor: pointer; }
-  #sharebtn:disabled { background: #e5e7eb; color: #9ca3af; box-shadow: none; cursor: default; }
-  #overlay { position: absolute; inset: 0; background: rgba(0,0,0,.4); display: none; align-items: flex-end; z-index: 10; }
-  #overlay.open { display: flex; }
-  #sheet { background: #fff; width: 100%; border-radius: 24px 24px 0 0; max-height: 85%; display: flex; flex-direction: column; }
-  #sheethead { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 10px; border-bottom: 1px solid #f3f4f6; }
-  #sheettitle { font-weight: 700; font-size: 16px; }
-  #closebtn { border: 0; background: transparent; font-size: 20px; color: #9ca3af; cursor: pointer; }
-  #preview { overflow-y: auto; padding: 14px 20px; flex: 1; }
-  .pgroup { margin-bottom: 12px; }
-  .ptitle { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
-  .pitem { font-size: 14px; color: #4b5563; padding: 2px 0 2px 4px; }
-  .pq { color: #047857; font-weight: 600; }
-  #sheetfoot { padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid #f3f4f6; }
-  #sendbtn { width: 100%; border: 0; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 700; color: #fff; background: #059669; cursor: pointer; }
-  .footrow { display: flex; gap: 8px; margin-top: 8px; }
-  .footrow button { flex: 1; border: 0; border-radius: 12px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
-  .ghost { background: #f3f4f6; color: #374151; }
-  .danger { background: #fef2f2; color: #dc2626; }
-</style>
+  <div id="toast-container" class="toast-container"></div>
 
-<script>
-(function () {
-  // ── To send straight to your WhatsApp, put your number here (country code + number, digits only).
-  //    Example for Singapore: "6591234567". Leave "" and she'll just pick your chat after tapping Send.
-  var OWNER_WHATSAPP = "";
+  <script>
+  (function () {
+    // ── To send straight to your WhatsApp, put your number here (country code + number, digits only).
+    //    Example for Singapore: "6591234567". Leave "" and you'll pick the chat after tapping Share.
+    var OWNER_WHATSAPP = "";
 
-  function esc(s) { return String(s).replace(/[&<>"']/g, function (m) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[m]; }); }
-  function el(id) { return document.getElementById(id); }
+    var EMOJI_COLORS = {
+      "🥦": "#10b981", "🍎": "#ef4444", "🌾": "#f59e0b", "🥖": "#b45309", "🥜": "#d97706",
+      "🧂": "#64748b", "🍯": "#fbbf24", "☕": "#8b5cf6", "🍘": "#ec4899", "📋": "#3b82f6"
+    };
 
-  // Master list lives in list.json — edit there to add/remove items.
-  fetch("list.json?t=" + Date.now(), { cache: "no-store" })
-    .then(function (r) {
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      return r.json();
-    })
-    .then(init)
-    .catch(function (e) {
-      el("list").innerHTML =
-        '<div style="padding:24px;text-align:center;color:#dc2626;font-size:14px;line-height:1.5">' +
-        '<div style="font-size:32px;margin-bottom:8px">⚠️</div>' +
-        "Could not load the shopping list.<br>" +
-        "Check your internet and pull down to refresh.<br><br>" +
-        '<small style="color:#9ca3af">' + esc(e.message) + "</small></div>";
-    });
+    var state = { catalog: [], theme: "dark", extras: [], eseq: 0 };
+    var currentSearch = "", currentFilter = "all";
 
-  function init(RAW) {
-  var DATA = RAW.map(function (c, ci) {
-    return { emoji: c.emoji, name: c.name, items: c.items.map(function (n, ii) { return { id: "c" + ci + "i" + ii, name: n }; }) };
-  });
+    function el(id) { return document.getElementById(id); }
+    function esc(s) { return String(s).replace(/[&<>"']/g, function (m) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[m]; }); }
 
-  var checked = {}, extras = [], eseq = 0;
-
-  var html = "";
-  DATA.forEach(function (cat, ci) {
-    html += '<div class="cat" id="cat_' + ci + '">';
-    html += '<button class="cathead"><span class="chev">▾</span><span class="cemoji">' + cat.emoji + '</span><span class="cname">' + esc(cat.name) + '</span><span class="badge" id="badge_c' + ci + '" style="display:none">0</span></button>';
-    html += '<div class="catbody">';
-    cat.items.forEach(function (it) {
-      html += '<div class="item" id="row_' + it.id + '" data-id="' + it.id + '"><div class="tick"><span class="circle"></span><span class="iname">' + esc(it.name) + '</span></div><input class="qty" id="qty_' + it.id + '" placeholder="qty…" autocomplete="off"></div>';
-    });
-    html += '</div></div>';
-  });
-  el("list").innerHTML = html;
-
-  function qtyOf(domId) { var n = el(domId); return n ? n.value.trim() : ""; }
-  function total() { return Object.keys(checked).length + extras.length; }
-
-  function updateUI() {
-    DATA.forEach(function (cat, ci) {
-      var n = cat.items.filter(function (it) { return checked[it.id]; }).length;
-      var b = el("badge_c" + ci);
-      if (b) { b.textContent = n; b.style.display = n ? "inline-block" : "none"; }
-    });
-    var exb = el("exbadge"); exb.textContent = extras.length; exb.style.display = extras.length ? "inline-block" : "none";
-    var t = total(), btn = el("sharebtn");
-    btn.textContent = t > 0 ? "Review & Share (" + t + ")" : "Review & Share";
-    btn.disabled = t === 0;
-  }
-
-  el("scroll").addEventListener("click", function (e) {
-    var head = e.target.closest(".cathead");
-    if (head && !head.classList.contains("static")) { head.closest(".cat").classList.toggle("collapsed"); return; }
-    var del = e.target.closest(".exdel");
-    if (del) { var did = del.getAttribute("data-id"); extras = extras.filter(function (x) { return x.id !== did; }); del.closest(".item").remove(); updateUI(); return; }
-    var tick = e.target.closest(".tick");
-    if (tick) {
-      var row = tick.closest(".item");
-      if (row.classList.contains("exitem")) return;
-      var id = row.getAttribute("data-id");
-      if (checked[id]) { delete checked[id]; row.classList.remove("checked"); var q = el("qty_" + id); if (q) q.value = ""; }
-      else { checked[id] = true; row.classList.add("checked"); }
-      updateUI();
+    // ── Theme ──
+    function applyTheme() {
+      document.body.classList.toggle("light-mode", state.theme === "light");
+      try { localStorage.setItem("kitchenlist_theme", state.theme); } catch (e) {}
     }
-  });
+    (function initTheme() {
+      var saved; try { saved = localStorage.getItem("kitchenlist_theme"); } catch (e) {}
+      state.theme = saved || "dark";
+      applyTheme();
+    })();
 
-  el("search").addEventListener("input", function () {
-    var q = el("search").value.trim().toLowerCase();
-    el("clearsearch").style.display = q ? "inline" : "none";
-    var scroll = el("scroll");
-    if (q) { scroll.classList.add("searching"); el("extrasCard").style.display = "none"; }
-    else { scroll.classList.remove("searching"); el("extrasCard").style.display = ""; }
-    DATA.forEach(function (cat, ci) {
-      var vis = 0;
-      cat.items.forEach(function (it) {
-        var show = !q || it.name.toLowerCase().indexOf(q) !== -1;
-        el("row_" + it.id).style.display = show ? "" : "none";
-        if (show) vis++;
+    // ── Load & parse master-list.txt ──
+    fetch("master-list.txt?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+      .then(function (text) { parseCatalog(text); el("loading-state").classList.add("hidden"); el("shopping-list-groups").classList.remove("hidden"); render(); })
+      .catch(function (e) {
+        el("loading-state").innerHTML =
+          '<div style="font-size:32px;margin-bottom:8px">⚠️</div>' +
+          'Could not load the shopping list.<br>Check your connection and refresh.' +
+          '<br><br><small style="opacity:.6">' + esc(e.message) + "</small>";
       });
-      el("cat_" + ci).style.display = (!q || vis) ? "" : "none";
-    });
-  });
-  el("clearsearch").addEventListener("click", function () { el("search").value = ""; el("search").dispatchEvent(new Event("input")); });
 
-  function addExtra() {
-    var inp = el("exdraft"), name = inp.value.trim(); if (!name) return;
-    var id = "e" + (eseq++); extras.push({ id: id, name: name });
-    var row = document.createElement("div");
-    row.className = "item checked exitem"; row.setAttribute("data-id", id);
-    row.innerHTML = '<div class="tick"><span class="circle"></span><span class="iname">' + esc(name) + '</span></div><input class="qty" id="exqty_' + id + '" placeholder="qty…" autocomplete="off"><button class="exdel" data-id="' + id + '">✕</button>';
-    el("exlist").appendChild(row); inp.value = ""; updateUI();
-  }
-  el("exaddbtn").addEventListener("click", addExtra);
-  el("exdraft").addEventListener("keydown", function (e) { if (e.key === "Enter") addExtra(); });
-
-  function buildMessage() {
-    var d = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
-    var lines = ["🛒 *Shopping List*", d, ""];
-    DATA.forEach(function (cat) {
-      var picked = cat.items.filter(function (it) { return checked[it.id]; });
-      if (!picked.length) return;
-      lines.push(cat.emoji + " *" + cat.name + "*");
-      picked.forEach(function (it) { var q = qtyOf("qty_" + it.id); lines.push("• " + it.name + (q ? " (" + q + ")" : "")); });
-      lines.push("");
-    });
-    if (extras.length) {
-      lines.push("✏️ *Other items*");
-      extras.forEach(function (ex) { var q = qtyOf("exqty_" + ex.id); lines.push("• " + ex.name + (q ? " (" + q + ")" : "")); });
-      lines.push("");
+    function parseCatalog(text) {
+      var lines = text.split(/\r?\n/);
+      state.catalog = [];
+      var cur = null, ci = 0;
+      lines.forEach(function (line) {
+        var t = line.trim();
+        if (!t) return;
+        var first = Array.from(t)[0];
+        var isCat = /^\p{Extended_Pictographic}/u.test(t);
+        if (isCat) {
+          cur = { name: t, emoji: first, color: EMOJI_COLORS[first] || "#10b981", items: [], idx: ci++ };
+          state.catalog.push(cur);
+        } else if (cur) {
+          cur.items.push({ id: "c" + cur.idx + "i" + cur.items.length, name: t, checked: false, qty: "" });
+        }
+      });
     }
-    return lines.join("\n").trim();
-  }
-  function previewHTML() {
-    var out = "";
-    DATA.forEach(function (cat) {
-      var picked = cat.items.filter(function (it) { return checked[it.id]; });
-      if (!picked.length) return;
-      out += '<div class="pgroup"><div class="ptitle">' + cat.emoji + " " + esc(cat.name) + "</div>";
-      picked.forEach(function (it) { var q = qtyOf("qty_" + it.id); out += '<div class="pitem">• ' + esc(it.name) + (q ? ' <span class="pq">(' + esc(q) + ")</span>" : "") + "</div>"; });
-      out += "</div>";
-    });
-    if (extras.length) {
-      out += '<div class="pgroup"><div class="ptitle">✏️ Other items</div>';
-      extras.forEach(function (ex) { var q = qtyOf("exqty_" + ex.id); out += '<div class="pitem">• ' + esc(ex.name) + (q ? ' <span class="pq">(' + esc(q) + ")</span>" : "") + "</div>"; });
-      out += "</div>";
+
+    // ── Render ──
+    function render() { renderPills(); renderGroups(); updateCount(); }
+
+    function renderPills() {
+      var box = el("category-filters");
+      box.querySelectorAll('.filter-pill:not([data-category="all"])').forEach(function (p) { p.remove(); });
+      box.querySelector('[data-category="all"]').classList.toggle("active", currentFilter === "all");
+      state.catalog.forEach(function (cat) {
+        var b = document.createElement("button");
+        b.className = "filter-pill" + (currentFilter === cat.name ? " active" : "");
+        b.dataset.category = cat.name;
+        b.textContent = cat.name;
+        box.appendChild(b);
+      });
     }
-    return out;
-  }
 
-  el("sharebtn").addEventListener("click", function () {
-    if (total() === 0) return;
-    el("preview").innerHTML = previewHTML();
-    el("sheettitle").textContent = "Shopping List (" + total() + ")";
-    el("overlay").classList.add("open");
-  });
-  function closeSheet() { el("overlay").classList.remove("open"); }
-  el("closebtn").addEventListener("click", closeSheet);
-  el("overlay").addEventListener("click", function (e) { if (e.target === el("overlay")) closeSheet(); });
+    function renderGroups() {
+      var wrap = el("shopping-list-groups");
+      wrap.innerHTML = "";
+      var q = currentSearch.trim().toLowerCase();
+      var matches = 0;
 
-  function clearAll() {
-    checked = {};
-    var rows = document.querySelectorAll(".item.checked");
-    for (var i = 0; i < rows.length; i++) rows[i].classList.remove("checked");
-    var qs = document.querySelectorAll(".qty");
-    for (var k = 0; k < qs.length; k++) qs[k].value = "";
-    extras = []; el("exlist").innerHTML = ""; el("exdraft").value = "";
-    closeSheet(); updateUI();
-  }
+      state.catalog.forEach(function (cat) {
+        var items = cat.items;
+        if (q) items = items.filter(function (it) { return it.name.toLowerCase().indexOf(q) !== -1; });
+        var catMatch = currentFilter === "all" || currentFilter === cat.name;
+        if (!items.length || !catMatch) return;
+        matches += items.length;
 
-  el("sendbtn").addEventListener("click", function () {
-    var text = buildMessage();
-    var base = OWNER_WHATSAPP ? "https://wa.me/" + OWNER_WHATSAPP + "?text=" : "https://wa.me/?text=";
-    window.open(base + encodeURIComponent(text), "_blank");
-    clearAll(); // reset to empty as soon as the list is sent
-  });
-  el("copybtn").addEventListener("click", function () {
-    var btn = el("copybtn");
-    try { navigator.clipboard.writeText(buildMessage()).then(function () { btn.textContent = "Copied!"; setTimeout(function () { btn.textContent = "Copy"; }, 1500); }); } catch (e) {}
-  });
-  el("clearbtn").addEventListener("click", clearAll);
+        var group = document.createElement("div");
+        group.className = "category-group";
+        group.innerHTML =
+          '<div class="category-header"><div class="category-title-wrapper">' +
+          '<span class="category-badge-dot" style="background:' + cat.color + ';color:' + cat.color + '"></span>' +
+          '<span class="category-title" style="color:' + cat.color + '">' + esc(cat.name) + '</span></div>' +
+          '<span class="category-count">' + items.length + ' item' + (items.length === 1 ? "" : "s") + '</span></div>' +
+          '<div class="category-items-container"></div>';
+        var container = group.querySelector(".category-items-container");
 
-  updateUI();
-  }
-})();
-</script>
+        items.forEach(function (it) {
+          var card = document.createElement("div");
+          card.className = "item-card" + (it.checked ? " checked" : "");
+          card.dataset.id = it.id;
+          card.innerHTML =
+            '<div class="item-left"><span class="checkbox-btn">✓</span>' +
+            '<span class="item-title">' + esc(it.name) + '</span></div>' +
+            '<input class="qty" placeholder="qty…" autocomplete="off" value="' + esc(it.qty) + '">';
+          var qtyInput = card.querySelector(".qty");
+          qtyInput.addEventListener("click", function (e) { e.stopPropagation(); });
+          qtyInput.addEventListener("input", function () { it.qty = qtyInput.value; });
+          card.addEventListener("click", function () { toggleItem(it, card); });
+          container.appendChild(card);
+        });
+        wrap.appendChild(group);
+      });
+
+      // ── "Other items" section (only when not searching/filtering) ──
+      if (!q && currentFilter === "all") {
+        var og = document.createElement("div");
+        og.className = "category-group";
+        og.innerHTML =
+          '<div class="category-header"><div class="category-title-wrapper">' +
+          '<span class="category-badge-dot" style="background:#3b82f6;color:#3b82f6"></span>' +
+          '<span class="category-title" style="color:#3b82f6">✏️ Other items</span></div>' +
+          '<span class="category-count">' + state.extras.length + ' added</span></div>' +
+          '<div class="category-items-container" id="ex-list"></div>' +
+          '<div class="other-add"><input id="ex-draft" placeholder="Add something not on the list…" autocomplete="off"><button id="ex-add-btn">+</button></div>';
+        wrap.appendChild(og);
+        var exList = og.querySelector("#ex-list");
+        state.extras.forEach(function (ex) { exList.appendChild(buildExtraCard(ex)); });
+        og.querySelector("#ex-add-btn").addEventListener("click", addExtra);
+        og.querySelector("#ex-draft").addEventListener("keydown", function (e) { if (e.key === "Enter") addExtra(); });
+      }
+
+      el("empty-state").classList.toggle("hidden", matches > 0 || (!q && currentFilter === "all"));
+    }
+
+    function buildExtraCard(ex) {
+      var card = document.createElement("div");
+      card.className = "item-card checked";
+      card.innerHTML =
+        '<div class="item-left"><span class="checkbox-btn">✓</span>' +
+        '<span class="item-title">' + esc(ex.name) + '</span></div>' +
+        '<input class="qty" placeholder="qty…" autocomplete="off" value="' + esc(ex.qty) + '">' +
+        '<button class="ex-del" title="Remove">✕</button>';
+      var qtyInput = card.querySelector(".qty");
+      qtyInput.addEventListener("click", function (e) { e.stopPropagation(); });
+      qtyInput.addEventListener("input", function () { ex.qty = qtyInput.value; });
+      card.querySelector(".ex-del").addEventListener("click", function (e) {
+        e.stopPropagation();
+        state.extras = state.extras.filter(function (x) { return x.id !== ex.id; });
+        render();
+      });
+      return card;
+    }
+
+    function addExtra() {
+      var inp = el("ex-draft"), name = inp.value.trim();
+      if (!name) return;
+      state.extras.push({ id: "e" + (state.eseq++), name: name, qty: "" });
+      render();
+      var d = el("ex-draft"); if (d) d.focus();
+    }
+
+    function toggleItem(it, card) {
+      it.checked = !it.checked;
+      if (!it.checked) it.qty = "";
+      card.classList.toggle("checked", it.checked);
+      if (it.checked) { var qf = card.querySelector(".qty"); if (qf) qf.value = it.qty; }
+      if (it.checked && navigator.vibrate) navigator.vibrate(12);
+      updateCount();
+    }
+
+    function totalSelected() {
+      var n = state.extras.length;
+      state.catalog.forEach(function (c) { n += c.items.filter(function (i) { return i.checked; }).length; });
+      return n;
+    }
+
+    function updateCount() {
+      var n = totalSelected();
+      el("selected-count-label").textContent = n;
+      el("whatsapp-share-btn").disabled = n === 0;
+    }
+
+    // ── Build shareable message ──
+    function buildMessage() {
+      var now = new Date();
+      var d = now.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+      var lines = ["🛒 *Shopping List*", d, ""];
+      state.catalog.forEach(function (cat) {
+        var picked = cat.items.filter(function (i) { return i.checked; });
+        if (!picked.length) return;
+        lines.push(cat.name);
+        picked.forEach(function (i) { lines.push("• " + i.name + (i.qty.trim() ? " (" + i.qty.trim() + ")" : "")); });
+        lines.push("");
+      });
+      if (state.extras.length) {
+        lines.push("✏️ Other items");
+        state.extras.forEach(function (ex) { lines.push("• " + ex.name + (ex.qty.trim() ? " (" + ex.qty.trim() + ")" : "")); });
+        lines.push("");
+      }
+      return lines.join("\n").trim();
+    }
+
+    // ── Actions ──
+    el("whatsapp-share-btn").addEventListener("click", function () {
+      if (totalSelected() === 0) { showToast("Tick some items first!", "info"); return; }
+      var base = OWNER_WHATSAPP ? "https://wa.me/" + OWNER_WHATSAPP + "?text=" : "https://wa.me/?text=";
+      window.open(base + encodeURIComponent(buildMessage()), "_blank");
+    });
+
+    el("copy-list-btn").addEventListener("click", function () {
+      if (totalSelected() === 0) { showToast("Tick some items first!", "info"); return; }
+      var text = buildMessage();
+      function done() { showToast("Copied list to clipboard!", "success"); }
+      try {
+        navigator.clipboard.writeText(text).then(done, function () { legacyCopy(text); done(); });
+      } catch (e) { legacyCopy(text); done(); }
+    });
+    function legacyCopy(text) {
+      var ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta);
+      ta.select(); try { document.execCommand("copy"); } catch (e) {} document.body.removeChild(ta);
+    }
+
+    el("clear-all-btn").addEventListener("click", function () {
+      if (totalSelected() === 0) { showToast("Nothing to clear.", "info"); return; }
+      state.catalog.forEach(function (c) { c.items.forEach(function (i) { i.checked = false; i.qty = ""; }); });
+      state.extras = [];
+      render();
+      showToast("Cleared the list.", "success");
+    });
+
+    el("theme-toggle").addEventListener("click", function () {
+      state.theme = state.theme === "dark" ? "light" : "dark";
+      applyTheme();
+    });
+
+    // ── Search + filter ──
+    el("search-input").addEventListener("input", function (e) {
+      currentSearch = e.target.value;
+      el("search-clear-btn").classList.toggle("hidden", !currentSearch);
+      renderGroups();
+    });
+    el("search-clear-btn").addEventListener("click", function () {
+      el("search-input").value = ""; currentSearch = "";
+      el("search-clear-btn").classList.add("hidden");
+      renderGroups();
+    });
+    el("category-filters").addEventListener("click", function (e) {
+      var pill = e.target.closest(".filter-pill");
+      if (!pill) return;
+      var cat = pill.dataset.category;
+      currentFilter = (cat === "all" || currentFilter === cat) ? "all" : cat;
+      render();
+    });
+
+    // ── Toasts ──
+    function showToast(message, type) {
+      var c = el("toast-container");
+      var t = document.createElement("div");
+      t.className = "toast " + (type || "info") + " glass";
+      t.textContent = message;
+      c.appendChild(t);
+      setTimeout(function () {
+        t.style.opacity = "0"; t.style.transform = "translateY(-10px) scale(0.95)";
+        setTimeout(function () { t.remove(); }, 300);
+      }, 2600);
+    }
+  })();
+  </script>
 </body>
 </html>
