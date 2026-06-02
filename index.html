@@ -411,8 +411,8 @@
         wrap.appendChild(group);
       });
 
-      // ── "Other items" section (only when not searching/filtering) ──
-      if (!q && currentFilter === "all") {
+      // ── "Other items" section — shown under every tab (hidden only while searching) ──
+      if (!q) {
         var og = document.createElement("div");
         og.className = "category-group";
         og.innerHTML =
@@ -429,7 +429,7 @@
         og.querySelector("#ex-draft").addEventListener("keydown", function (e) { if (e.key === "Enter") addExtra(); });
       }
 
-      el("empty-state").classList.toggle("hidden", matches > 0 || (!q && currentFilter === "all"));
+      el("empty-state").classList.toggle("hidden", matches > 0 || !q);
     }
 
     function buildExtraCard(ex) {
