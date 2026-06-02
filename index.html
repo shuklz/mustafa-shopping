@@ -375,19 +375,22 @@
     function renderPills() {
       var box = el("category-filters");
       box.querySelectorAll('.filter-pill:not([data-category="all"])').forEach(function (p) { p.remove(); });
-      box.querySelector('[data-category="all"]').classList.toggle("active", currentFilter === "all");
+      var totalAll = state.catalog.reduce(function (n, c) { return n + c.items.length; }, 0);
+      var allPill = box.querySelector('[data-category="all"]');
+      allPill.classList.toggle("active", currentFilter === "all");
+      allPill.textContent = "All Items (" + totalAll + ")";
       state.catalog.forEach(function (cat) {
         var b = document.createElement("button");
         b.className = "filter-pill" + (currentFilter === cat.name ? " active" : "");
         b.dataset.category = cat.name;
-        b.textContent = cat.name;
+        b.textContent = cat.name + " (" + cat.items.length + ")";
         box.appendChild(b);
       });
       // ── "Others" tab at the end: a dedicated home for wild items not in any category ──
       var others = document.createElement("button");
       others.className = "filter-pill" + (currentFilter === "__others__" ? " active" : "");
       others.dataset.category = "__others__";
-      others.textContent = "✏️ Others";
+      others.textContent = "✏️ Others (" + state.extras.length + ")";
       box.appendChild(others);
     }
 
