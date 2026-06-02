@@ -174,6 +174,8 @@
   body.light-mode .toast.success { background: #ecfdf5; border: 1px solid #10b981; color: #065f46; }
   .toast.info { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; }
   body.light-mode .toast.info { background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; }
+  .toast-text { flex: 1; }
+  .toast-action { margin-left: 0.6rem; background: transparent; border: none; color: var(--accent); font-family: var(--font-display); font-weight: 700; font-size: 0.82rem; cursor: pointer; padding: 2px 4px; flex: none; }
   </style>
 </head>
 <body>
@@ -264,10 +266,69 @@
       applyTheme();
     })();
 
+    // ── Persistence: auto-save the in-progress list to this phone ──
+    // Keyed by category + item NAME (not position) so editing master-list.txt
+    // never corrupts a saved list.
+    var STORAGE_KEY = "kitchenlist_state_v1";
+    function itemKey(catName, itemName) { return catName + "" + itemName; }
+
+    function saveState() {
+      try {
+        var data = { items: {}, extras: [] };
+        state.catalog.forEach(function (cat) {
+          cat.items.forEach(function (it) {
+            if (it.checked) data.items[itemKey(cat.name, it.name)] = it.qty || "";
+          });
+        });
+        data.extras = state.extras.map(function (ex) { return { name: ex.name, qty: ex.qty || "" }; });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {}
+    }
+
+    function loadSavedInto() {
+      var raw; try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) { return; }
+      if (!raw) return;
+      var data; try { data = JSON.parse(raw); } catch (e) { return; }
+      if (!data) return;
+      if (data.items) {
+        state.catalog.forEach(function (cat) {
+          cat.items.forEach(function (it) {
+            var q = data.items[itemKey(cat.name, it.name)];
+            if (q !== undefined) { it.checked = true; it.qty = q || ""; }
+          });
+        });
+      }
+      if (Array.isArray(data.extras)) {
+        state.extras = data.extras.map(function (ex) { return { id: "e" + (state.eseq++), name: ex.name, qty: ex.qty || "" }; });
+      }
+    }
+
+    // Snapshot/restore used by Clear's Undo.
+    function snapshotState() {
+      var snap = { items: {}, extras: [] };
+      state.catalog.forEach(function (cat) {
+        cat.items.forEach(function (it) {
+          if (it.checked) snap.items[itemKey(cat.name, it.name)] = it.qty || "";
+        });
+      });
+      snap.extras = state.extras.map(function (ex) { return { name: ex.name, qty: ex.qty || "" }; });
+      return snap;
+    }
+    function restoreSnapshot(snap) {
+      state.catalog.forEach(function (cat) {
+        cat.items.forEach(function (it) {
+          var q = snap.items[itemKey(cat.name, it.name)];
+          if (q !== undefined) { it.checked = true; it.qty = q; }
+          else { it.checked = false; it.qty = ""; }
+        });
+      });
+      state.extras = snap.extras.map(function (ex) { return { id: "e" + (state.eseq++), name: ex.name, qty: ex.qty || "" }; });
+    }
+
     // ── Load & parse master-list.txt ──
     fetch("master-list.txt?t=" + Date.now(), { cache: "no-store" })
       .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
-      .then(function (text) { parseCatalog(text); el("loading-state").classList.add("hidden"); el("shopping-list-groups").classList.remove("hidden"); render(); })
+      .then(function (text) { parseCatalog(text); loadSavedInto(); el("loading-state").classList.add("hidden"); el("shopping-list-groups").classList.remove("hidden"); render(); })
       .catch(function (e) {
         el("loading-state").innerHTML =
           '<div style="font-size:32px;margin-bottom:8px">⚠️</div>' +
@@ -342,7 +403,7 @@
             '<input class="qty" placeholder="qty…" autocomplete="off" value="' + esc(it.qty) + '">';
           var qtyInput = card.querySelector(".qty");
           qtyInput.addEventListener("click", function (e) { e.stopPropagation(); });
-          qtyInput.addEventListener("input", function () { it.qty = qtyInput.value; });
+          qtyInput.addEventListener("input", function () { it.qty = qtyInput.value; saveState(); });
           card.addEventListener("click", function () { toggleItem(it, card); });
           container.appendChild(card);
         });
@@ -380,10 +441,11 @@
         '<button class="ex-del" title="Remove">✕</button>';
       var qtyInput = card.querySelector(".qty");
       qtyInput.addEventListener("click", function (e) { e.stopPropagation(); });
-      qtyInput.addEventListener("input", function () { ex.qty = qtyInput.value; });
+      qtyInput.addEventListener("input", function () { ex.qty = qtyInput.value; saveState(); });
       card.querySelector(".ex-del").addEventListener("click", function (e) {
         e.stopPropagation();
         state.extras = state.extras.filter(function (x) { return x.id !== ex.id; });
+        saveState();
         render();
       });
       return card;
@@ -393,6 +455,7 @@
       var inp = el("ex-draft"), name = inp.value.trim();
       if (!name) return;
       state.extras.push({ id: "e" + (state.eseq++), name: name, qty: "" });
+      saveState();
       render();
       var d = el("ex-draft"); if (d) d.focus();
     }
@@ -404,6 +467,7 @@
       if (it.checked) { var qf = card.querySelector(".qty"); if (qf) qf.value = it.qty; }
       if (it.checked && navigator.vibrate) navigator.vibrate(12);
       updateCount();
+      saveState();
     }
 
     function totalSelected() {
@@ -460,10 +524,17 @@
 
     el("clear-all-btn").addEventListener("click", function () {
       if (totalSelected() === 0) { showToast("Nothing to clear.", "info"); return; }
+      var snapshot = snapshotState();
       state.catalog.forEach(function (c) { c.items.forEach(function (i) { i.checked = false; i.qty = ""; }); });
       state.extras = [];
+      saveState();
       render();
-      showToast("Cleared the list.", "success");
+      showToast("Cleared the list.", "info", "Undo", function () {
+        restoreSnapshot(snapshot);
+        saveState();
+        render();
+        showToast("Restored.", "success");
+      });
     });
 
     el("theme-toggle").addEventListener("click", function () {
@@ -491,16 +562,25 @@
     });
 
     // ── Toasts ──
-    function showToast(message, type) {
+    function showToast(message, type, actionLabel, actionFn) {
       var c = el("toast-container");
       var t = document.createElement("div");
       t.className = "toast " + (type || "info") + " glass";
-      t.textContent = message;
+      var span = document.createElement("span");
+      span.className = "toast-text";
+      span.textContent = message;
+      t.appendChild(span);
+      var timer;
+      function dismiss() { t.style.opacity = "0"; t.style.transform = "translateY(-10px) scale(0.95)"; setTimeout(function () { t.remove(); }, 300); }
+      if (actionLabel && actionFn) {
+        var btn = document.createElement("button");
+        btn.className = "toast-action";
+        btn.textContent = actionLabel;
+        btn.addEventListener("click", function () { clearTimeout(timer); t.remove(); actionFn(); });
+        t.appendChild(btn);
+      }
       c.appendChild(t);
-      setTimeout(function () {
-        t.style.opacity = "0"; t.style.transform = "translateY(-10px) scale(0.95)";
-        setTimeout(function () { t.remove(); }, 300);
-      }, 2600);
+      timer = setTimeout(dismiss, actionLabel ? 6000 : 2600);
     }
   })();
   </script>
