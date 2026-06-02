@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#059669">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Kitchen List</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9B%92%3C/text%3E%3C/svg%3E">
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #f3f4f6; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <div id="titlebar"><span class="cart">🛒</span> Kitchen List</div>
+    <div id="searchbar">
+      <span class="sicon">🔍</span>
+      <input id="search" placeholder="Search items…" autocomplete="off">
+      <span id="clearsearch">✕</span>
+    </div>
+  </div>
+
+  <div id="scroll">
+    <div id="list"></div>
+    <div id="extrasCard" class="cat">
+      <div class="cathead static"><span class="cemoji">✏️</span><span class="cname">Other items</span><span class="badge" id="exbadge" style="display:none">0</span></div>
+      <div class="catbody open">
+        <div id="exlist"></div>
+        <div class="exadd">
+          <input id="exdraft" placeholder="Add something not on the list…" autocomplete="off">
+          <button id="exaddbtn">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="bottombar"><button id="sharebtn" disabled>Review &amp; Share</button></div>
+
+  <div id="overlay">
+    <div id="sheet">
+      <div id="sheethead"><span id="sheettitle">Shopping List</span><button id="closebtn">✕</button></div>
+      <div id="preview"></div>
+      <div id="sheetfoot">
+        <button id="sendbtn">Send to WhatsApp</button>
+        <div class="footrow">
+          <button id="copybtn" class="ghost">Copy</button>
+          <button id="clearbtn" class="danger">Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  #app {
+    position: relative; height: 100vh; max-width: 430px; margin: 0 auto;
+    display: flex; flex-direction: column; background: #f3f4f6; overflow: hidden;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color: #111827;
+  }
+  #header { background: #059669; color: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.15); z-index: 5; }
+  #titlebar { font-size: 18px; font-weight: 700; padding: 16px 16px 10px; display: flex; align-items: center; gap: 8px; }
+  #searchbar { display: flex; align-items: center; gap: 8px; margin: 0 16px 12px; background: rgba(255,255,255,.22); border-radius: 12px; padding: 9px 12px; }
+  #searchbar .sicon { font-size: 14px; opacity: .9; }
+  #search { flex: 1; border: 0; background: transparent; outline: none; color: #fff; font-size: 15px; }
+  #search::placeholder { color: #d1fae5; }
+  #clearsearch { color: #d1fae5; font-size: 14px; display: none; padding: 2px 4px; }
+  #scroll { flex: 1; overflow-y: auto; padding: 12px; -webkit-overflow-scrolling: touch; }
+  .cat { background: #fff; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; overflow: hidden; }
+  .cathead { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: transparent; padding: 12px; text-align: left; cursor: pointer; font: inherit; }
+  .chev { color: #9ca3af; font-size: 13px; transition: transform .15s; width: 14px; }
+  .cat.collapsed .chev { transform: rotate(-90deg); }
+  .cat.collapsed .catbody:not(.open) { display: none; }
+  .cathead.static { cursor: default; }
+  .cemoji { font-size: 19px; }
+  .cname { font-weight: 600; font-size: 14px; color: #1f2937; }
+  .badge { margin-left: 2px; font-size: 11px; font-weight: 700; background: #d1fae5; color: #047857; border-radius: 999px; padding: 2px 8px; }
+  .catbody { padding: 0 8px 8px; }
+  .searching .catbody { display: block !important; }
+  .searching .chev { visibility: hidden; }
+  .item { display: flex; align-items: center; gap: 8px; border-radius: 12px; padding: 0 8px; }
+  .item.checked { background: #ecfdf5; }
+  .tick { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; padding: 12px 0; cursor: pointer; }
+  .circle { width: 24px; height: 24px; border-radius: 999px; border: 2px solid #d1d5db; flex: none; display: flex; align-items: center; justify-content: center; }
+  .item.checked .circle { background: #10b981; border-color: #10b981; }
+  .item.checked .circle::after { content: "✓"; color: #fff; font-size: 14px; font-weight: 700; line-height: 1; }
+  .iname { font-size: 14px; color: #374151; }
+  .item.checked .iname { color: #065f46; font-weight: 600; }
+  .qty { display: none; width: 78px; flex: none; text-align: right; font-size: 12px; color: #065f46; background: #fff; border: 1px solid #a7f3d0; border-radius: 9px; padding: 7px 8px; outline: none; }
+  .qty:focus { border-color: #10b981; }
+  .item.checked .qty { display: block; }
+  .exdel { border: 0; background: transparent; color: #ef4444; font-size: 15px; padding: 6px; cursor: pointer; }
+  .exadd { display: flex; align-items: center; gap: 8px; padding: 6px 8px 4px; }
+  .exadd input { flex: 1; border: 1px solid #e5e7eb; border-radius: 9px; padding: 9px 10px; font-size: 14px; outline: none; }
+  .exadd input:focus { border-color: #10b981; }
+  #exaddbtn { border: 0; background: #10b981; color: #fff; width: 38px; height: 38px; border-radius: 9px; font-size: 20px; cursor: pointer; flex: none; }
+  #bottombar { padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); background: linear-gradient(transparent, #f3f4f6 30%); }
+  #sharebtn { width: 100%; border: 0; border-radius: 16px; padding: 16px; font-size: 16px; font-weight: 700; color: #fff; background: #059669; box-shadow: 0 4px 12px rgba(5,150,105,.3); cursor: pointer; }
+  #sharebtn:disabled { background: #e5e7eb; color: #9ca3af; box-shadow: none; cursor: default; }
+  #overlay { position: absolute; inset: 0; background: rgba(0,0,0,.4); display: none; align-items: flex-end; z-index: 10; }
+  #overlay.open { display: flex; }
+  #sheet { background: #fff; width: 100%; border-radius: 24px 24px 0 0; max-height: 85%; display: flex; flex-direction: column; }
+  #sheethead { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 10px; border-bottom: 1px solid #f3f4f6; }
+  #sheettitle { font-weight: 700; font-size: 16px; }
+  #closebtn { border: 0; background: transparent; font-size: 20px; color: #9ca3af; cursor: pointer; }
+  #preview { overflow-y: auto; padding: 14px 20px; flex: 1; }
+  .pgroup { margin-bottom: 12px; }
+  .ptitle { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .pitem { font-size: 14px; color: #4b5563; padding: 2px 0 2px 4px; }
+  .pq { color: #047857; font-weight: 600; }
+  #sheetfoot { padding: 14px 16px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid #f3f4f6; }
+  #sendbtn { width: 100%; border: 0; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 700; color: #fff; background: #059669; cursor: pointer; }
+  .footrow { display: flex; gap: 8px; margin-top: 8px; }
+  .footrow button { flex: 1; border: 0; border-radius: 12px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .ghost { background: #f3f4f6; color: #374151; }
+  .danger { background: #fef2f2; color: #dc2626; }
+</style>
+
+<script>
+(function () {
+  // ── To send straight to your WhatsApp, put your number here (country code + number, digits only).
+  //    Example for Singapore: "6591234567". Leave "" and she'll just pick your chat after tapping Send.
+  var OWNER_WHATSAPP = "";
+
+  // ── MASTER LIST — maintained by the owner. Edit items here, then re-deploy.
+  var RAW = [
+    { emoji: "🥦", name: "Vegetables", items: ["Onion","Garlic","Ginger","Potato","Tomato","Carrot","Radish","Beetroot","Cucumber","Cabbage","Cauliflower","Corn on the cob","Beans","Capsicum","Spinach","Methi leaves","Coriander leaves","Green chillies","Bhindi (Okra)","Lauki (Bottle gourd)","Turai (Ridge gourd)","Parwal (Pointed gourd)","Bitter gourd (Karela)","Brinjal (Eggplant)","Arbi (Taro root)"] },
+    { emoji: "🍎", name: "Fruits", items: ["Apple","Avocado","Papaya","Mango","Watermelon","Guava","Fresh figs","Assorted fruits for pooja"] },
+    { emoji: "🌾", name: "Pulses, Beans & Grains", items: ["White peas","Black channa","Chickpeas","Channa dal","Toor dal","Green dal / Moong","Rajma","Brown rice","Basmati rice","Daliya","Poha","Ragi"] },
+    { emoji: "🥖", name: "Flour & Staples", items: ["Aashirvaad Atta","Besan","Muri (Puffed rice)"] },
+    { emoji: "🥜", name: "Nuts, Seeds & Healthy Items", items: ["Walnuts","Almonds","Cashews","Raisins","Flax seeds","Chia seeds","Sesame seeds"] },
+    { emoji: "🧂", name: "Spices & Seasonings", items: ["Salt","Black salt","Cumin seeds","Coriander powder","Ginger powder"] },
+    { emoji: "🍯", name: "Oils & Sweeteners", items: ["Ghee","Mustard oil","Jaggery powder","Mishri"] },
+    { emoji: "☕", name: "Beverages", items: ["Brooke Bond Tea","Horlicks"] },
+    { emoji: "🍘", name: "Snacks & Miscellaneous", items: ["Bhujia","Sev","Chips","Digestive biscuits","Noodles","Khichiya","Pickles"] }
+  ];
+
+  var DATA = RAW.map(function (c, ci) {
+    return { emoji: c.emoji, name: c.name, items: c.items.map(function (n, ii) { return { id: "c" + ci + "i" + ii, name: n }; }) };
+  });
+
+  var checked = {}, extras = [], eseq = 0;
+
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (m) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[m]; }); }
+  function el(id) { return document.getElementById(id); }
+
+  var html = "";
+  DATA.forEach(function (cat, ci) {
+    html += '<div class="cat" id="cat_' + ci + '">';
+    html += '<button class="cathead"><span class="chev">▾</span><span class="cemoji">' + cat.emoji + '</span><span class="cname">' + esc(cat.name) + '</span><span class="badge" id="badge_c' + ci + '" style="display:none">0</span></button>';
+    html += '<div class="catbody">';
+    cat.items.forEach(function (it) {
+      html += '<div class="item" id="row_' + it.id + '" data-id="' + it.id + '"><div class="tick"><span class="circle"></span><span class="iname">' + esc(it.name) + '</span></div><input class="qty" id="qty_' + it.id + '" placeholder="qty…" autocomplete="off"></div>';
+    });
+    html += '</div></div>';
+  });
+  el("list").innerHTML = html;
+
+  function qtyOf(domId) { var n = el(domId); return n ? n.value.trim() : ""; }
+  function total() { return Object.keys(checked).length + extras.length; }
+
+  function updateUI() {
+    DATA.forEach(function (cat, ci) {
+      var n = cat.items.filter(function (it) { return checked[it.id]; }).length;
+      var b = el("badge_c" + ci);
+      if (b) { b.textContent = n; b.style.display = n ? "inline-block" : "none"; }
+    });
+    var exb = el("exbadge"); exb.textContent = extras.length; exb.style.display = extras.length ? "inline-block" : "none";
+    var t = total(), btn = el("sharebtn");
+    btn.textContent = t > 0 ? "Review & Share (" + t + ")" : "Review & Share";
+    btn.disabled = t === 0;
+  }
+
+  el("scroll").addEventListener("click", function (e) {
+    var head = e.target.closest(".cathead");
+    if (head && !head.classList.contains("static")) { head.closest(".cat").classList.toggle("collapsed"); return; }
+    var del = e.target.closest(".exdel");
+    if (del) { var did = del.getAttribute("data-id"); extras = extras.filter(function (x) { return x.id !== did; }); del.closest(".item").remove(); updateUI(); return; }
+    var tick = e.target.closest(".tick");
+    if (tick) {
+      var row = tick.closest(".item");
+      if (row.classList.contains("exitem")) return;
+      var id = row.getAttribute("data-id");
+      if (checked[id]) { delete checked[id]; row.classList.remove("checked"); var q = el("qty_" + id); if (q) q.value = ""; }
+      else { checked[id] = true; row.classList.add("checked"); }
+      updateUI();
+    }
+  });
+
+  el("search").addEventListener("input", function () {
+    var q = el("search").value.trim().toLowerCase();
+    el("clearsearch").style.display = q ? "inline" : "none";
+    var scroll = el("scroll");
+    if (q) { scroll.classList.add("searching"); el("extrasCard").style.display = "none"; }
+    else { scroll.classList.remove("searching"); el("extrasCard").style.display = ""; }
+    DATA.forEach(function (cat, ci) {
+      var vis = 0;
+      cat.items.forEach(function (it) {
+        var show = !q || it.name.toLowerCase().indexOf(q) !== -1;
+        el("row_" + it.id).style.display = show ? "" : "none";
+        if (show) vis++;
+      });
+      el("cat_" + ci).style.display = (!q || vis) ? "" : "none";
+    });
+  });
+  el("clearsearch").addEventListener("click", function () { el("search").value = ""; el("search").dispatchEvent(new Event("input")); });
+
+  function addExtra() {
+    var inp = el("exdraft"), name = inp.value.trim(); if (!name) return;
+    var id = "e" + (eseq++); extras.push({ id: id, name: name });
+    var row = document.createElement("div");
+    row.className = "item checked exitem"; row.setAttribute("data-id", id);
+    row.innerHTML = '<div class="tick"><span class="circle"></span><span class="iname">' + esc(name) + '</span></div><input class="qty" id="exqty_' + id + '" placeholder="qty…" autocomplete="off"><button class="exdel" data-id="' + id + '">✕</button>';
+    el("exlist").appendChild(row); inp.value = ""; updateUI();
+  }
+  el("exaddbtn").addEventListener("click", addExtra);
+  el("exdraft").addEventListener("keydown", function (e) { if (e.key === "Enter") addExtra(); });
+
+  function buildMessage() {
+    var d = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    var lines = ["🛒 *Shopping List*", d, ""];
+    DATA.forEach(function (cat) {
+      var picked = cat.items.filter(function (it) { return checked[it.id]; });
+      if (!picked.length) return;
+      lines.push(cat.emoji + " *" + cat.name + "*");
+      picked.forEach(function (it) { var q = qtyOf("qty_" + it.id); lines.push("• " + it.name + (q ? " (" + q + ")" : "")); });
+      lines.push("");
+    });
+    if (extras.length) {
+      lines.push("✏️ *Other items*");
+      extras.forEach(function (ex) { var q = qtyOf("exqty_" + ex.id); lines.push("• " + ex.name + (q ? " (" + q + ")" : "")); });
+      lines.push("");
+    }
+    return lines.join("\n").trim();
+  }
+  function previewHTML() {
+    var out = "";
+    DATA.forEach(function (cat) {
+      var picked = cat.items.filter(function (it) { return checked[it.id]; });
+      if (!picked.length) return;
+      out += '<div class="pgroup"><div class="ptitle">' + cat.emoji + " " + esc(cat.name) + "</div>";
+      picked.forEach(function (it) { var q = qtyOf("qty_" + it.id); out += '<div class="pitem">• ' + esc(it.name) + (q ? ' <span class="pq">(' + esc(q) + ")</span>" : "") + "</div>"; });
+      out += "</div>";
+    });
+    if (extras.length) {
+      out += '<div class="pgroup"><div class="ptitle">✏️ Other items</div>';
+      extras.forEach(function (ex) { var q = qtyOf("exqty_" + ex.id); out += '<div class="pitem">• ' + esc(ex.name) + (q ? ' <span class="pq">(' + esc(q) + ")</span>" : "") + "</div>"; });
+      out += "</div>";
+    }
+    return out;
+  }
+
+  el("sharebtn").addEventListener("click", function () {
+    if (total() === 0) return;
+    el("preview").innerHTML = previewHTML();
+    el("sheettitle").textContent = "Shopping List (" + total() + ")";
+    el("overlay").classList.add("open");
+  });
+  function closeSheet() { el("overlay").classList.remove("open"); }
+  el("closebtn").addEventListener("click", closeSheet);
+  el("overlay").addEventListener("click", function (e) { if (e.target === el("overlay")) closeSheet(); });
+
+  function clearAll() {
+    checked = {};
+    var rows = document.querySelectorAll(".item.checked");
+    for (var i = 0; i < rows.length; i++) rows[i].classList.remove("checked");
+    var qs = document.querySelectorAll(".qty");
+    for (var k = 0; k < qs.length; k++) qs[k].value = "";
+    extras = []; el("exlist").innerHTML = ""; el("exdraft").value = "";
+    closeSheet(); updateUI();
+  }
+
+  el("sendbtn").addEventListener("click", function () {
+    var text = buildMessage();
+    var base = OWNER_WHATSAPP ? "https://wa.me/" + OWNER_WHATSAPP + "?text=" : "https://wa.me/?text=";
+    window.open(base + encodeURIComponent(text), "_blank");
+    clearAll(); // reset to empty as soon as the list is sent
+  });
+  el("copybtn").addEventListener("click", function () {
+    var btn = el("copybtn");
+    try { navigator.clipboard.writeText(buildMessage()).then(function () { btn.textContent = "Copied!"; setTimeout(function () { btn.textContent = "Copy"; }, 1500); }); } catch (e) {}
+  });
+  el("clearbtn").addEventListener("click", clearAll);
+
+  updateUI();
+})();
+</script>
+</body>
+</html>
