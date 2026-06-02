@@ -196,7 +196,7 @@
           <div class="logo-icon">🛒</div>
           <div class="logo-text-wrapper">
             <h1>Kitchen List</h1>
-            <p class="logo-subtitle">Master Shopping List</p>
+            <p class="logo-subtitle" id="logo-subtitle">Master Shopping List</p>
           </div>
         </div>
         <div class="header-actions">
@@ -369,29 +369,54 @@
     function render() {
       // Share bar lives on "All Items" and in the review view — share from there; other tabs get the space.
       document.querySelector(".app-container").classList.toggle("hide-actions", currentFilter !== "all" && !selectedOnly);
+      var sub = el("logo-subtitle");
+      if (sub) {
+        var totalAll = state.catalog.reduce(function (n, c) { return n + c.items.length; }, 0);
+        sub.textContent = totalAll ? "Master Shopping List (" + totalAll + ")" : "Master Shopping List";
+      }
       renderPills(); renderGroups(); updateCount();
     }
+
+    // Pills show how many items are *selected* (progress), not the catalog total —
+    // the per-category totals already live in each list group header. Count is
+    // omitted at 0 so untouched tabs stay clean.
+    function catSelected(cat) { return cat.items.filter(function (i) { return i.checked; }).length; }
+    function pillLabel(base, n) { return n > 0 ? base + " (" + n + ")" : base; }
 
     function renderPills() {
       var box = el("category-filters");
       box.querySelectorAll('.filter-pill:not([data-category="all"])').forEach(function (p) { p.remove(); });
-      var totalAll = state.catalog.reduce(function (n, c) { return n + c.items.length; }, 0);
       var allPill = box.querySelector('[data-category="all"]');
       allPill.classList.toggle("active", currentFilter === "all");
-      allPill.textContent = "All Items (" + totalAll + ")";
+      allPill.textContent = pillLabel("All Items", totalSelected());
       state.catalog.forEach(function (cat) {
         var b = document.createElement("button");
         b.className = "filter-pill" + (currentFilter === cat.name ? " active" : "");
         b.dataset.category = cat.name;
-        b.textContent = cat.name + " (" + cat.items.length + ")";
+        b.textContent = pillLabel(cat.name, catSelected(cat));
         box.appendChild(b);
       });
       // ── "Others" tab at the end: a dedicated home for wild items not in any category ──
       var others = document.createElement("button");
       others.className = "filter-pill" + (currentFilter === "__others__" ? " active" : "");
       others.dataset.category = "__others__";
-      others.textContent = "✏️ Others (" + state.extras.length + ")";
+      others.textContent = pillLabel("✏️ Others", state.extras.length);
       box.appendChild(others);
+    }
+
+    // Refresh just the pill counts in place (no rebuild → tab scroll position is kept).
+    function updatePillCounts() {
+      var box = el("category-filters");
+      if (!box) return;
+      box.querySelectorAll(".filter-pill").forEach(function (p) {
+        var cat = p.dataset.category;
+        if (cat === "all") p.textContent = pillLabel("All Items", totalSelected());
+        else if (cat === "__others__") p.textContent = pillLabel("✏️ Others", state.extras.length);
+        else {
+          var c = state.catalog.filter(function (x) { return x.name === cat; })[0];
+          p.textContent = pillLabel(cat, c ? catSelected(c) : 0);
+        }
+      });
     }
 
     function renderGroups() {
@@ -523,6 +548,7 @@
       var n = totalSelected();
       el("selected-count-label").textContent = n;
       el("whatsapp-share-btn").disabled = n === 0;
+      updatePillCounts();
       var txt = el("selected-summary-text");
       if (txt) txt.textContent = selectedOnly
         ? "selected · tap to show all"
