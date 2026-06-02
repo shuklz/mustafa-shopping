@@ -83,7 +83,8 @@
   /* Header */
   .app-header { padding: calc(0.9rem + env(safe-area-inset-top)) 1.2rem 0.8rem; background: linear-gradient(to bottom, var(--bg-app) 75%, transparent 100%); z-index: 10; flex-shrink: 0; }
   .header-top { display: flex; justify-content: space-between; align-items: center; }
-  .logo-area { display: flex; align-items: center; gap: 0.6rem; }
+  .logo-area { display: flex; align-items: center; gap: 0.6rem; cursor: pointer; }
+  .logo-area:active { transform: scale(0.98); }
   .logo-icon { width: 34px; height: 34px; border-radius: var(--radius-sm); background: linear-gradient(135deg, var(--accent) 0%, #14b8a6 100%); color: #fff; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px var(--accent-glow); font-size: 18px; }
   .logo-text-wrapper { display: flex; flex-direction: column; }
   .logo-text-wrapper h1 { font-size: 1.3rem; letter-spacing: -0.5px; line-height: 1.1; background: linear-gradient(to right, var(--text-primary), var(--accent)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
@@ -157,7 +158,9 @@
   .app-container.hide-actions .app-bottom-nav { display: none; }
   .app-container.hide-actions .list-scroll-area { padding-bottom: calc(1.5rem + env(safe-area-inset-bottom)); }
   .bottom-action-panel { display: flex; flex-direction: column; gap: 0.6rem; padding: 0.8rem 1.2rem; margin: 0.2rem 0.8rem 0.6rem; border-radius: var(--radius-lg); }
-  .selected-summary { display: flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-secondary); }
+  .selected-summary { display: flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-secondary); cursor: pointer; transition: var(--transition-fast); }
+  .selected-summary:active { transform: scale(0.98); }
+  .selected-summary.reviewing { color: var(--accent); }
   .selected-count { background: var(--accent); color: #fff; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; display: inline-flex; justify-content: center; align-items: center; font-size: 0.65rem; box-shadow: 0 2px 6px var(--accent-glow); }
   .button-action-group { display: flex; gap: 0.6rem; width: 100%; }
   .btn { height: 44px; border-radius: var(--radius-md); border: none; font-family: var(--font-display); font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: var(--transition-fast); display: inline-flex; justify-content: center; align-items: center; gap: 0.4rem; padding: 0 1rem; }
@@ -189,7 +192,7 @@
   <div class="app-container">
     <header class="app-header">
       <div class="header-top">
-        <div class="logo-area">
+        <div class="logo-area" id="logo-home" role="button" tabindex="0" title="Show all items">
           <div class="logo-icon">🛒</div>
           <div class="logo-text-wrapper">
             <h1>Kitchen List</h1>
@@ -232,9 +235,9 @@
 
     <nav class="app-bottom-nav">
       <div class="bottom-action-panel glass">
-        <div class="selected-summary">
+        <div class="selected-summary" id="selected-summary" role="button" tabindex="0" title="Review the selected items">
           <span class="selected-count" id="selected-count-label">0</span>
-          <span>items selected</span>
+          <span id="selected-summary-text">items selected</span>
         </div>
         <div class="button-action-group">
           <button id="share-btn" class="btn btn-secondary" title="Share to apps (Notes, Messages…)">📤 Share</button>
@@ -258,7 +261,7 @@
     };
 
     var state = { catalog: [], theme: "dark", extras: [], eseq: 0 };
-    var currentSearch = "", currentFilter = "all";
+    var currentSearch = "", currentFilter = "all", selectedOnly = false;
 
     function el(id) { return document.getElementById(id); }
     function esc(s) { return String(s).replace(/[&<>"']/g, function (m) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[m]; }); }
@@ -364,8 +367,8 @@
 
     // ── Render ──
     function render() {
-      // Share bar lives only on "All Items" — review & share there; other tabs get the space.
-      document.querySelector(".app-container").classList.toggle("hide-actions", currentFilter !== "all");
+      // Share bar lives on "All Items" and in the review view — share from there; other tabs get the space.
+      document.querySelector(".app-container").classList.toggle("hide-actions", currentFilter !== "all" && !selectedOnly);
       renderPills(); renderGroups(); updateCount();
     }
 
@@ -391,6 +394,7 @@
       state.catalog.forEach(function (cat) {
         var items = cat.items;
         if (q) items = items.filter(function (it) { return it.name.toLowerCase().indexOf(q) !== -1; });
+        if (selectedOnly) items = items.filter(function (it) { return it.checked; });
         var catMatch = currentFilter === "all" || currentFilter === cat.name;
         if (!items.length || !catMatch) return;
         matches += items.length;
@@ -422,8 +426,9 @@
         wrap.appendChild(group);
       });
 
-      // ── "Other items" section — shown under every tab (hidden only while searching) ──
-      if (!q) {
+      // ── "Other items" section — shown under every tab (hidden while searching, and
+      //    hidden in review view when there are none to show) ──
+      if (!q && !(selectedOnly && state.extras.length === 0)) {
         var og = document.createElement("div");
         og.className = "category-group";
         og.innerHTML =
@@ -438,6 +443,8 @@
         state.extras.forEach(function (ex) { exList.appendChild(buildExtraCard(ex)); });
         og.querySelector("#ex-add-btn").addEventListener("click", addExtra);
         og.querySelector("#ex-draft").addEventListener("keydown", function (e) { if (e.key === "Enter") addExtra(); });
+        // In the review view the add box is just noise — hide it, keep the items.
+        if (selectedOnly) og.querySelector(".other-add").style.display = "none";
       }
 
       el("empty-state").classList.toggle("hidden", matches > 0 || !q);
@@ -492,6 +499,8 @@
       if (it.checked && navigator.vibrate) navigator.vibrate(12);
       updateCount();
       saveState();
+      // In the review view, an unticked item is no longer part of the list — drop it.
+      if (selectedOnly && !it.checked) renderGroups();
     }
 
     function totalSelected() {
@@ -504,6 +513,11 @@
       var n = totalSelected();
       el("selected-count-label").textContent = n;
       el("whatsapp-share-btn").disabled = n === 0;
+      var txt = el("selected-summary-text");
+      if (txt) txt.textContent = selectedOnly
+        ? "selected · tap to show all"
+        : (n === 0 ? "items selected" : "selected · tap to review");
+      el("selected-summary").classList.toggle("reviewing", selectedOnly);
     }
 
     // ── Build shareable message ──
@@ -571,6 +585,28 @@
       applyTheme();
     });
 
+    // ── Logo / heading = "home": jump back to the full All Items list ──
+    function goHome() {
+      currentFilter = "all"; selectedOnly = false;
+      el("search-input").value = ""; currentSearch = "";
+      el("search-clear-btn").classList.add("hidden");
+      render();
+      el("list-scroll-area").scrollTop = 0;
+    }
+    el("logo-home").addEventListener("click", goHome);
+    el("logo-home").addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goHome(); } });
+
+    // ── Tap "items selected" to review only the chosen items before sharing ──
+    function toggleReview() {
+      if (!selectedOnly && totalSelected() === 0) { showToast("Tick some items first!", "info"); return; }
+      selectedOnly = !selectedOnly;
+      if (selectedOnly) currentFilter = "all";
+      render();
+      el("list-scroll-area").scrollTop = 0;
+    }
+    el("selected-summary").addEventListener("click", toggleReview);
+    el("selected-summary").addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleReview(); } });
+
     // ── Search + filter ──
     el("search-input").addEventListener("input", function (e) {
       currentSearch = e.target.value;
@@ -596,6 +632,7 @@
       var pill = e.target.closest(".filter-pill");
       if (!pill) return;
       var cat = pill.dataset.category;
+      selectedOnly = false;
       currentFilter = (cat === "all" || currentFilter === cat) ? "all" : cat;
       render();
     });
