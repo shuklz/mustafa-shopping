@@ -153,6 +153,9 @@
 
   /* Bottom action bar */
   .app-bottom-nav { position: absolute; bottom: 0; left: 0; width: 100%; padding-bottom: env(safe-area-inset-bottom); background: linear-gradient(to top, var(--bg-app) 78%, transparent 100%); z-index: 15; }
+  /* On a filtered category tab, hide the share bar and reclaim the space */
+  .app-container.hide-actions .app-bottom-nav { display: none; }
+  .app-container.hide-actions .list-scroll-area { padding-bottom: calc(1.5rem + env(safe-area-inset-bottom)); }
   .bottom-action-panel { display: flex; flex-direction: column; gap: 0.6rem; padding: 0.8rem 1.2rem; margin: 0.2rem 0.8rem 0.6rem; border-radius: var(--radius-lg); }
   .selected-summary { display: flex; align-items: center; gap: 0.4rem; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-secondary); }
   .selected-count { background: var(--accent); color: #fff; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; display: inline-flex; justify-content: center; align-items: center; font-size: 0.65rem; box-shadow: 0 2px 6px var(--accent-glow); }
@@ -161,7 +164,8 @@
   .btn:active { transform: scale(0.97); }
   .btn:disabled { opacity: 0.45; cursor: default; }
   .btn-secondary { background: var(--field-bg); color: var(--text-primary); border: 1px solid var(--glass-border); }
-  .button-action-group .btn { flex: 1; }
+  .button-action-group .btn-secondary { flex: 1; }
+  .button-action-group .btn-primary { flex: 1.7; }
   .btn-primary { background: var(--whatsapp-green); color: #fff; flex-grow: 1; box-shadow: 0 4px 14px rgba(37,211,102,.35); }
   .btn-primary:hover:not(:disabled) { background: var(--whatsapp-green-hover); }
   .btn-accent { background: var(--accent); color: #fff; margin-top: 1.2rem; box-shadow: 0 4px 14px var(--accent-glow); }
@@ -233,10 +237,9 @@
           <span>items selected</span>
         </div>
         <div class="button-action-group">
-          <button id="copy-list-btn" class="btn btn-secondary" title="Copy list">📄 Copy</button>
-          <button id="share-btn" class="btn btn-secondary" title="Share to apps (Notes, Messages…)">📤 Share…</button>
+          <button id="share-btn" class="btn btn-secondary" title="Share to apps (Notes, Messages…)">📤 Share</button>
+          <button id="whatsapp-share-btn" class="btn btn-primary" disabled>💬 Share to WhatsApp</button>
         </div>
-        <button id="whatsapp-share-btn" class="btn btn-primary" disabled>💬 Share to WhatsApp</button>
       </div>
     </nav>
   </div>
@@ -360,7 +363,11 @@
     }
 
     // ── Render ──
-    function render() { renderPills(); renderGroups(); updateCount(); }
+    function render() {
+      // Share bar lives only on "All Items" — review & share there; other tabs get the space.
+      document.querySelector(".app-container").classList.toggle("hide-actions", currentFilter !== "all");
+      renderPills(); renderGroups(); updateCount();
+    }
 
     function renderPills() {
       var box = el("category-filters");
@@ -524,15 +531,6 @@
       if (totalSelected() === 0) { showToast("Tick some items first!", "info"); return; }
       var base = OWNER_WHATSAPP ? "https://wa.me/" + OWNER_WHATSAPP + "?text=" : "https://wa.me/?text=";
       window.open(base + encodeURIComponent(buildMessage()), "_blank");
-    });
-
-    el("copy-list-btn").addEventListener("click", function () {
-      if (totalSelected() === 0) { showToast("Tick some items first!", "info"); return; }
-      var text = buildMessage();
-      function done() { showToast("Copied list to clipboard!", "success"); }
-      try {
-        navigator.clipboard.writeText(text).then(done, function () { legacyCopy(text); done(); });
-      } catch (e) { legacyCopy(text); done(); }
     });
 
     // Native share sheet (iOS/Android) — send the list as plain text to Notes, Messages, Mail, etc.
