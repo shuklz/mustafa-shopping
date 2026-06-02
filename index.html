@@ -160,7 +160,8 @@
   .btn { height: 44px; border-radius: var(--radius-md); border: none; font-family: var(--font-display); font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: var(--transition-fast); display: inline-flex; justify-content: center; align-items: center; gap: 0.4rem; padding: 0 1rem; }
   .btn:active { transform: scale(0.97); }
   .btn:disabled { opacity: 0.45; cursor: default; }
-  .btn-secondary { background: var(--field-bg); color: var(--text-primary); border: 1px solid var(--glass-border); flex-shrink: 0; }
+  .btn-secondary { background: var(--field-bg); color: var(--text-primary); border: 1px solid var(--glass-border); }
+  .button-action-group .btn { flex: 1; }
   .btn-primary { background: var(--whatsapp-green); color: #fff; flex-grow: 1; box-shadow: 0 4px 14px rgba(37,211,102,.35); }
   .btn-primary:hover:not(:disabled) { background: var(--whatsapp-green-hover); }
   .btn-accent { background: var(--accent); color: #fff; margin-top: 1.2rem; box-shadow: 0 4px 14px var(--accent-glow); }
@@ -233,8 +234,9 @@
         </div>
         <div class="button-action-group">
           <button id="copy-list-btn" class="btn btn-secondary" title="Copy list">📄 Copy</button>
-          <button id="whatsapp-share-btn" class="btn btn-primary" disabled>💬 Share to WhatsApp</button>
+          <button id="share-btn" class="btn btn-secondary" title="Share to apps (Notes, Messages…)">📤 Share…</button>
         </div>
+        <button id="whatsapp-share-btn" class="btn btn-primary" disabled>💬 Share to WhatsApp</button>
       </div>
     </nav>
   </div>
@@ -531,6 +533,20 @@
       try {
         navigator.clipboard.writeText(text).then(done, function () { legacyCopy(text); done(); });
       } catch (e) { legacyCopy(text); done(); }
+    });
+
+    // Native share sheet (iOS/Android) — send the list as plain text to Notes, Messages, Mail, etc.
+    el("share-btn").addEventListener("click", function () {
+      if (totalSelected() === 0) { showToast("Tick some items first!", "info"); return; }
+      var text = buildMessage();
+      if (navigator.share) {
+        navigator.share({ text: text }).catch(function () { /* user cancelled — ignore */ });
+      } else {
+        // Desktop/unsupported: fall back to clipboard so nothing is lost.
+        function done() { showToast("Sharing not supported here — copied instead.", "info"); }
+        try { navigator.clipboard.writeText(text).then(done, function () { legacyCopy(text); done(); }); }
+        catch (e) { legacyCopy(text); done(); }
+      }
     });
     function legacyCopy(text) {
       var ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta);
