@@ -628,6 +628,9 @@
       el("search-clear-btn").classList.add("hidden");
       render();
       el("list-scroll-area").scrollTop = 0;
+      // Tab strip may be scrolled right (e.g. on Others); snap it back so All Items is visible.
+      var pills = document.querySelector(".category-filters-container");
+      if (pills) pills.scrollLeft = 0;
     }
     el("logo-home").addEventListener("click", goHome);
     el("logo-home").addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goHome(); } });
