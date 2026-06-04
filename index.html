@@ -95,6 +95,13 @@
      (accelerating) — together they trace an arc up into the cart. */
   .fly-outer { position: fixed; z-index: 2000; pointer-events: none; transform: translate(-50%, -50%); transition: transform 0.62s linear; }
   .fly-inner { display: inline-block; font-size: 1.4rem; line-height: 1; filter: drop-shadow(0 3px 6px rgba(0,0,0,.35)); transition: transform 0.62s cubic-bezier(0.55, 0, 1, 0.45), opacity 0.55s ease-in 0.07s; }
+
+  /* A light band that wipes across the app when the list is cleared. */
+  .clear-sweep { position: absolute; inset: 0; z-index: 30; pointer-events: none; opacity: 0;
+    background: linear-gradient(115deg, transparent 38%, var(--accent-glow) 47%, hsla(var(--accent-h), var(--accent-s), var(--accent-l), 0.5) 50%, var(--accent-glow) 53%, transparent 62%);
+    background-size: 250% 100%; background-position: 150% 0; }
+  .clear-sweep.go { animation: clearSweep 0.6s ease-out forwards; }
+  @keyframes clearSweep { 0% { background-position: 150% 0; opacity: 0; } 12% { opacity: 1; } 100% { background-position: -150% 0; opacity: 0; } }
   .logo-text-wrapper { display: flex; flex-direction: column; }
   .logo-text-wrapper h1 { font-size: 1.3rem; letter-spacing: -0.5px; line-height: 1.1; background: linear-gradient(to right, var(--text-primary), var(--accent)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
   .logo-subtitle { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase; color: var(--text-secondary); opacity: 0.85; }
@@ -205,7 +212,7 @@
     <header class="app-header">
       <div class="header-top">
         <div class="logo-area" id="logo-home" role="button" tabindex="0" title="Show all items">
-          <div class="logo-icon">🛒<span class="cart-badge hidden" id="cart-badge" aria-hidden="true">0</span></div>
+          <div class="logo-icon" id="cart-btn" role="button" tabindex="0" title="View selected items" aria-label="View selected items">🛒<span class="cart-badge hidden" id="cart-badge" aria-hidden="true">0</span></div>
           <div class="logo-text-wrapper">
             <h1>Kitchen List</h1>
             <p class="logo-subtitle" id="logo-subtitle">Master Shopping List</p>
@@ -361,6 +368,7 @@
     // A bright rising blip when ticking an item; a soft low blip when switching
     // tabs; a descending sweep when the list is cleared.
     function playTick() { playTone({ from: 880, to: 1320, peak: 0.18, dur: 0.08, type: "triangle" }); }
+    function playUntick() { playTone({ from: 660, to: 420, peak: 0.10, dur: 0.07, type: "sine" }); }
     function playNav() { playTone({ from: 480, to: 620, peak: 0.09, dur: 0.05, type: "sine" }); }
     function playClear() { playTone({ from: 600, to: 240, peak: 0.14, dur: 0.16, type: "triangle" }); }
 
@@ -369,12 +377,22 @@
     try { reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
     function flyToCart(sourceEl, icon) {
       if (reduceMotion || !sourceEl) return;
-      var target = document.querySelector(".logo-icon");
-      if (!target) return;
+      var iconEl = document.querySelector(".logo-icon");
+      if (!iconEl) return;
       try {
-        var s = sourceEl.getBoundingClientRect(), t = target.getBoundingClientRect();
+        var s = sourceEl.getBoundingClientRect();
+        // Aim at the badge itself when it's showing; otherwise the icon's
+        // top-right corner, which is exactly where the badge will appear.
+        var badge = el("cart-badge"), endX, endY;
+        if (badge && !badge.classList.contains("hidden")) {
+          var b = badge.getBoundingClientRect();
+          endX = b.left + b.width / 2; endY = b.top + b.height / 2;
+        } else {
+          var t = iconEl.getBoundingClientRect();
+          endX = t.right; endY = t.top;
+        }
         var startX = s.left + s.width / 2, startY = s.top + s.height / 2;
-        var dx = (t.left + t.width / 2) - startX, dy = (t.top + t.height / 2) - startY;
+        var dx = endX - startX, dy = endY - startY;
         var outer = document.createElement("span"); outer.className = "fly-outer";
         var inner = document.createElement("span"); inner.className = "fly-inner";
         inner.textContent = icon || "✅";
@@ -383,8 +401,8 @@
         document.body.appendChild(outer);
         void outer.offsetWidth; // reflow so the transition runs from the start point
         outer.style.transform = "translate(calc(-50% + " + dx + "px), -50%)";
-        inner.style.transform = "translate(0, " + dy + "px) scale(0.35)";
-        inner.style.opacity = "0.2";
+        inner.style.transform = "translate(0, " + dy + "px) scale(0.12)";
+        inner.style.opacity = "0";
         setTimeout(function () {
           outer.remove();
           // Pop the badge as the icon lands.
@@ -394,6 +412,19 @@
           }
         }, 640);
       } catch (e) { /* layout unavailable — skip the flourish */ }
+    }
+
+    // A quick light sweep across the app to accompany the clear sound.
+    function clearSweep() {
+      if (reduceMotion) return;
+      var host = document.querySelector(".app-container");
+      if (!host) return;
+      var sweep = document.createElement("div");
+      sweep.className = "clear-sweep";
+      host.appendChild(sweep);
+      void sweep.offsetWidth;
+      sweep.classList.add("go");
+      setTimeout(function () { sweep.remove(); }, 650);
     }
 
     // ── Persistence: auto-save the in-progress list to this phone ──
@@ -658,6 +689,8 @@
         if (navigator.vibrate) navigator.vibrate(12);
         playTick();
         flyToCart(card.querySelector(".item-emoji") || card.querySelector(".checkbox-btn"), itemIcon(it.name));
+      } else {
+        playUntick();
       }
       updateCount();
       saveState();
@@ -746,6 +779,7 @@
       state.extras = [];
       saveState();
       playClear();
+      clearSweep();
       render();
       showToast("Cleared the list.", "info", "Undo", function () {
         restoreSnapshot(snapshot);
@@ -781,11 +815,17 @@
     el("logo-home").addEventListener("click", goHome);
     el("logo-home").addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goHome(); } });
 
+    // Tapping the cart icon opens the selected-only review (the badge is "your cart").
+    // stopPropagation so it doesn't also fire the logo's go-home handler.
+    el("cart-btn").addEventListener("click", function (e) { e.stopPropagation(); toggleReview(); });
+    el("cart-btn").addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); toggleReview(); } });
+
     // ── Tap "items selected" to review only the chosen items before sharing ──
     function toggleReview() {
       if (!selectedOnly && totalSelected() === 0) { showToast("Tick some items first!", "info"); return; }
       selectedOnly = !selectedOnly;
       if (selectedOnly) currentFilter = "all";
+      playNav();
       render();
       el("list-scroll-area").scrollTop = 0;
     }
