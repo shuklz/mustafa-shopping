@@ -777,6 +777,8 @@
       var snapshot = snapshotState();
       state.catalog.forEach(function (c) { c.items.forEach(function (i) { i.checked = false; i.qty = ""; }); });
       state.extras = [];
+      // Clearing empties the review view — drop back to the full list so it isn't blank.
+      selectedOnly = false; currentFilter = "all";
       saveState();
       playClear();
       clearSweep();
