@@ -134,6 +134,7 @@
   @keyframes itemEntrance { from { opacity: 0; transform: translateY(10px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
   .item-card:hover { border-color: var(--glass-border); }
   .item-left { display: flex; align-items: center; gap: 0.7rem; min-width: 0; flex: 1; }
+  .item-emoji { font-size: 1.1rem; line-height: 1; flex-shrink: 0; }
   .checkbox-btn { width: 20px; height: 20px; border-radius: var(--radius-round); border: 2px solid var(--text-secondary); background: transparent; display: flex; justify-content: center; align-items: center; flex-shrink: 0; transition: all var(--transition-bounce); color: transparent; font-size: 12px; font-weight: 700; }
   .item-card:hover .checkbox-btn { border-color: var(--accent); }
   .item-title { font-weight: 550; font-size: 0.92rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: var(--transition-fast); }
@@ -262,6 +263,40 @@
       "🥦": "#10b981", "🍎": "#ef4444", "🌾": "#f59e0b", "🥖": "#b45309", "🥜": "#d97706",
       "🧂": "#64748b", "🍯": "#fbbf24", "☕": "#8b5cf6", "🍘": "#ec4899", "📋": "#3b82f6"
     };
+
+    // Per-item icons. Matched as substrings against the lowercased item name, in
+    // order — so put more specific keywords first (e.g. "daliya" before "dal").
+    // Items with no sensible emoji just render without one. Trusted data, not user
+    // input, so the emoji goes into innerHTML directly.
+    var ITEM_ICONS = [
+      ["onion", "🧅"], ["garlic", "🧄"], ["ginger", "🫚"], ["potato", "🥔"],
+      ["tomato", "🍅"], ["carrot", "🥕"], ["cucumber", "🥒"], ["cabbage", "🥬"],
+      ["corn", "🌽"], ["capsicum", "🫑"], ["spinach", "🥬"], ["methi", "🌿"],
+      ["chilli", "🌶️"], ["brinjal", "🍆"], ["eggplant", "🍆"],
+      ["apple", "🍎"], ["avocado", "🥑"], ["mango", "🥭"], ["watermelon", "🍉"],
+      ["assorted", "🧺"],
+      ["daliya", "🌾"], ["channa", "🫘"], ["chickpea", "🫘"], ["toor", "🫘"],
+      ["moong", "🫘"], ["rajma", "🫘"], ["peas", "🫘"], ["beans", "🫘"],
+      ["dal", "🫘"], ["poha", "🍚"], ["rice", "🍚"], ["ragi", "🌾"],
+      ["atta", "🌾"], ["besan", "🌾"],
+      ["walnut", "🌰"], ["almond", "🌰"], ["cashew", "🌰"], ["raisin", "🍇"],
+      ["flax", "🌱"], ["chia", "🌱"], ["sesame", "🌱"],
+      ["salt", "🧂"], ["cumin", "🌿"], ["coriander", "🌿"],
+      ["ghee", "🧈"], ["oil", "🫗"], ["jaggery", "🍯"], ["mishri", "🍬"],
+      ["tea", "☕"], ["horlicks", "🥛"],
+      ["milk", "🥛"], ["bread", "🍞"], ["egg", "🥚"], ["yoghurt", "🥛"],
+      ["yogurt", "🥛"], ["paneer", "🧀"], ["cheese", "🧀"], ["butter", "🧈"],
+      ["rasmalai", "🍮"],
+      ["bhujia", "🥨"], ["sev", "🥨"], ["khichiya", "🥨"], ["chips", "🍟"],
+      ["biscuit", "🍪"], ["noodle", "🍜"], ["pickle", "🥒"]
+    ];
+    function itemIcon(name) {
+      var n = String(name).toLowerCase();
+      for (var i = 0; i < ITEM_ICONS.length; i++) {
+        if (n.indexOf(ITEM_ICONS[i][0]) !== -1) return ITEM_ICONS[i][1];
+      }
+      return "";
+    }
 
     var state = { catalog: [], theme: "dark", sound: "on", extras: [], eseq: 0 };
     var currentSearch = "", currentFilter = "all", selectedOnly = false;
@@ -484,8 +519,10 @@
           var card = document.createElement("div");
           card.className = "item-card" + (it.checked ? " checked" : "");
           card.dataset.id = it.id;
+          var icon = itemIcon(it.name);
           card.innerHTML =
             '<div class="item-left"><span class="checkbox-btn">✓</span>' +
+            (icon ? '<span class="item-emoji">' + icon + '</span>' : '') +
             '<span class="item-title">' + esc(it.name) + '</span></div>' +
             '<input class="qty" placeholder="qty…" autocomplete="off" value="' + esc(it.qty) + '">';
           var qtyInput = card.querySelector(".qty");
@@ -532,8 +569,10 @@
     function buildExtraCard(ex) {
       var card = document.createElement("div");
       card.className = "item-card checked";
+      var icon = itemIcon(ex.name);
       card.innerHTML =
         '<div class="item-left"><span class="checkbox-btn">✓</span>' +
+        (icon ? '<span class="item-emoji">' + icon + '</span>' : '') +
         '<span class="item-title">' + esc(ex.name) + '</span></div>' +
         '<input class="qty" placeholder="qty…" autocomplete="off" value="' + esc(ex.qty) + '">' +
         '<button class="ex-del" title="Remove">✕</button>';
