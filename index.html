@@ -95,6 +95,8 @@
   .icon-btn.danger:hover { color: #ef4444; border-color: rgba(239,68,68,.2); background: rgba(239,68,68,.05); }
   #theme-toggle .moon { display: inline; } #theme-toggle .sun { display: none; }
   body.light-mode #theme-toggle .moon { display: none; } body.light-mode #theme-toggle .sun { display: inline; }
+  #sound-toggle .on { display: inline; } #sound-toggle .off { display: none; }
+  body.sound-off #sound-toggle .on { display: none; } body.sound-off #sound-toggle .off { display: inline; }
 
   /* Search + filters */
   .filter-section { padding: 0.4rem 1.2rem; display: flex; flex-direction: column; gap: 0.6rem; flex-shrink: 0; z-index: 5; }
@@ -201,6 +203,7 @@
         </div>
         <div class="header-actions">
           <button id="clear-all-btn" class="icon-btn danger" aria-label="Clear all" title="Clear all">🗑️</button>
+          <button id="sound-toggle" class="icon-btn" aria-label="Toggle tick sound" title="Toggle tick sound"><span class="on">🔊</span><span class="off">🔇</span></button>
           <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme" title="Toggle theme"><span class="moon">🌙</span><span class="sun">☀️</span></button>
         </div>
       </div>
@@ -260,7 +263,7 @@
       "🧂": "#64748b", "🍯": "#fbbf24", "☕": "#8b5cf6", "🍘": "#ec4899", "📋": "#3b82f6"
     };
 
-    var state = { catalog: [], theme: "dark", extras: [], eseq: 0 };
+    var state = { catalog: [], theme: "dark", sound: "on", extras: [], eseq: 0 };
     var currentSearch = "", currentFilter = "all", selectedOnly = false;
 
     function el(id) { return document.getElementById(id); }
@@ -276,6 +279,40 @@
       state.theme = saved || "dark";
       applyTheme();
     })();
+
+    // ── Tick sound ──
+    // Synthesised with the Web Audio API (no audio file to fetch — keeps us single-file).
+    // The AudioContext can't start until the user has interacted, so it's created lazily
+    // on the first tick and resumed if the browser suspended it.
+    var audioCtx = null;
+    function applySound() {
+      document.body.classList.toggle("sound-off", state.sound !== "on");
+      try { localStorage.setItem("kitchenlist_sound", state.sound); } catch (e) {}
+    }
+    (function initSound() {
+      var saved; try { saved = localStorage.getItem("kitchenlist_sound"); } catch (e) {}
+      state.sound = saved || "on";
+      applySound();
+    })();
+    function playTick() {
+      if (state.sound !== "on") return;
+      try {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        if (!audioCtx) audioCtx = new AC();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        var t = audioCtx.currentTime;
+        var osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(880, t);
+        osc.frequency.exponentialRampToValueAtTime(1320, t + 0.04);
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(0.18, t + 0.005);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+        osc.start(t); osc.stop(t + 0.08);
+      } catch (e) { /* audio not available — silent */ }
+    }
 
     // ── Persistence: auto-save the in-progress list to this phone ──
     // Keyed by category + item NAME (not position) so editing master-list.txt
@@ -531,7 +568,7 @@
       if (!it.checked) it.qty = "";
       card.classList.toggle("checked", it.checked);
       if (it.checked) { var qf = card.querySelector(".qty"); if (qf) qf.value = it.qty; }
-      if (it.checked && navigator.vibrate) navigator.vibrate(12);
+      if (it.checked) { if (navigator.vibrate) navigator.vibrate(12); playTick(); }
       updateCount();
       saveState();
       // In the review view, an unticked item is no longer part of the list — drop it.
@@ -619,6 +656,13 @@
     el("theme-toggle").addEventListener("click", function () {
       state.theme = state.theme === "dark" ? "light" : "dark";
       applyTheme();
+    });
+
+    el("sound-toggle").addEventListener("click", function () {
+      state.sound = state.sound === "on" ? "off" : "on";
+      applySound();
+      if (state.sound === "on") { playTick(); showToast("Tick sound on.", "info"); }
+      else showToast("Tick sound off.", "info");
     });
 
     // ── Logo / heading = "home": jump back to the full All Items list ──
