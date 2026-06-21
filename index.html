@@ -162,7 +162,7 @@
   @keyframes itemEntrance { from { opacity: 0; transform: translateY(10px) scale(0.96); } to { opacity: 1; transform: translateY(0) scale(1); } }
   .item-card:hover { border-color: var(--glass-border); }
   .item-left { display: flex; align-items: center; gap: 0.7rem; min-width: 0; flex: 1; }
-  .item-emoji { font-size: 1.1rem; line-height: 1; flex-shrink: 0; }
+  .item-emoji { font-size: 1.1rem; line-height: 1; flex-shrink: 0; width: 1.4rem; text-align: center; }
   .checkbox-btn { width: 20px; height: 20px; border-radius: var(--radius-round); border: 2px solid var(--text-secondary); background: transparent; display: flex; justify-content: center; align-items: center; flex-shrink: 0; transition: all var(--transition-bounce); color: transparent; font-size: 12px; font-weight: 700; }
   .item-card:hover .checkbox-btn { border-color: var(--accent); }
   .item-title { font-weight: 550; font-size: 0.92rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: var(--transition-fast); }
@@ -304,6 +304,7 @@
       ["tomato", "🍅"], ["carrot", "🥕"], ["cucumber", "🥒"], ["cabbage", "🥬"],
       ["corn", "🌽"], ["capsicum", "🫑"], ["spinach", "🥬"], ["methi", "🌿"],
       ["chilli", "🌶️"], ["brinjal", "🍆"], ["eggplant", "🍆"],
+      ["gourd", "🥒"], ["okra", "🥬"], ["bhindi", "🥬"],
       ["apple", "🍎"], ["avocado", "🥑"], ["mango", "🥭"], ["watermelon", "🍉"],
       ["assorted", "🧺"],
       ["daliya", "🌾"], ["channa dal", "🥣"], ["toor", "🥣"], ["moong", "🥣"],
@@ -678,12 +679,12 @@
           var card = document.createElement("div");
           card.className = "item-card" + (it.checked ? " checked" : "");
           card.dataset.id = it.id;
-          // Fall back to the category's own emoji when the item has no specific match,
-          // so every catalog row carries an icon (never a naked title).
-          var icon = itemIcon(it.name) || cat.emoji;
+          var icon = itemIcon(it.name);
+          // Always emit the emoji slot (empty when no match) so titles stay aligned
+          // whether or not an item has an icon.
           card.innerHTML =
             '<div class="item-left"><span class="checkbox-btn">✓</span>' +
-            (icon ? '<span class="item-emoji">' + icon + '</span>' : '') +
+            '<span class="item-emoji">' + icon + '</span>' +
             '<span class="item-title">' + esc(it.name) + '</span></div>' +
             '<input class="qty" placeholder="qty…" autocomplete="off" value="' + esc(it.qty) + '">';
           var qtyInput = card.querySelector(".qty");
@@ -733,7 +734,7 @@
       var icon = itemIcon(ex.name);
       card.innerHTML =
         '<div class="item-left"><span class="checkbox-btn">✓</span>' +
-        (icon ? '<span class="item-emoji">' + icon + '</span>' : '') +
+        '<span class="item-emoji">' + icon + '</span>' +
         '<span class="item-title">' + esc(ex.name) + '</span></div>' +
         '<input class="qty" placeholder="qty…" autocomplete="off" value="' + esc(ex.qty) + '">' +
         '<button class="ex-del" title="Remove">✕</button>';
