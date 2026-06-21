@@ -678,7 +678,9 @@
           var card = document.createElement("div");
           card.className = "item-card" + (it.checked ? " checked" : "");
           card.dataset.id = it.id;
-          var icon = itemIcon(it.name);
+          // Fall back to the category's own emoji when the item has no specific match,
+          // so every catalog row carries an icon (never a naked title).
+          var icon = itemIcon(it.name) || cat.emoji;
           card.innerHTML =
             '<div class="item-left"><span class="checkbox-btn">✓</span>' +
             (icon ? '<span class="item-emoji">' + icon + '</span>' : '') +
@@ -769,7 +771,8 @@
       if (it.checked) {
         if (navigator.vibrate) navigator.vibrate(12);
         playTick();
-        flyToCart(card.querySelector(".item-emoji") || card.querySelector(".checkbox-btn"), itemIcon(it.name));
+        var em = card.querySelector(".item-emoji");
+        flyToCart(em || card.querySelector(".checkbox-btn"), em ? em.textContent : itemIcon(it.name));
       } else {
         playUntick();
       }
