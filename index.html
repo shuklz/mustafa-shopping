@@ -109,6 +109,8 @@
   .icon-btn { width: 36px; height: 36px; border-radius: var(--radius-sm); border: 1px solid var(--glass-border); background: var(--glass-bg); color: var(--text-secondary); display: flex; justify-content: center; align-items: center; cursor: pointer; transition: var(--transition-fast); font-size: 16px; }
   .icon-btn:active { transform: scale(0.9); }
   .icon-btn.danger:hover { color: #ef4444; border-color: rgba(239,68,68,.2); background: rgba(239,68,68,.05); }
+  @keyframes refresh-spin { to { transform: rotate(360deg); } }
+  #refresh-btn.spinning { animation: refresh-spin 0.7s linear infinite; }
   #theme-toggle .moon { display: inline; } #theme-toggle .sun { display: none; }
   body.light-mode #theme-toggle .moon { display: none; } body.light-mode #theme-toggle .sun { display: inline; }
   #sound-toggle .on { display: inline; } #sound-toggle .off { display: none; }
@@ -213,6 +215,8 @@
   body.light-mode .toast.success { background: #ecfdf5; border: 1px solid #10b981; color: #065f46; }
   .toast.info { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; }
   body.light-mode .toast.info { background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; }
+  .toast.error { background: #450a0a; border: 1px solid #b91c1c; color: #fecaca; }
+  body.light-mode .toast.error { background: #fef2f2; border: 1px solid #ef4444; color: #991b1b; }
   .toast-text { flex: 1; }
   .toast-action { margin-left: 0.6rem; background: transparent; border: none; color: var(--accent); font-family: var(--font-display); font-weight: 700; font-size: 0.82rem; cursor: pointer; padding: 2px 4px; flex: none; }
   </style>
@@ -229,6 +233,7 @@
           </div>
         </div>
         <div class="header-actions">
+          <button id="refresh-btn" class="icon-btn" aria-label="Refresh list" title="Refresh list from master-list.txt">🔄</button>
           <button id="clear-all-btn" class="icon-btn danger" aria-label="Clear all" title="Clear all">🗑️</button>
           <button id="sound-toggle" class="icon-btn" aria-label="Toggle tick sound" title="Toggle tick sound"><span class="on">🔊</span><span class="off">🔇</span></button>
           <button id="theme-toggle" class="icon-btn" aria-label="Toggle theme" title="Toggle theme"><span class="moon">🌙</span><span class="sun">☀️</span></button>
@@ -497,15 +502,48 @@
     }
 
     // ── Load & parse master-list.txt ──
-    fetch("master-list.txt?t=" + Date.now(), { cache: "no-store" })
-      .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
-      .then(function (text) { parseCatalog(text); loadSavedInto(); el("loading-state").classList.add("hidden"); el("shopping-list-groups").classList.remove("hidden"); render(); })
-      .catch(function (e) {
-        el("loading-state").innerHTML =
-          '<div style="font-size:32px;margin-bottom:8px">⚠️</div>' +
-          'Could not load the shopping list.<br>Check your connection and refresh.' +
-          '<br><br><small style="opacity:.6">' + esc(e.message) + "</small>";
-      });
+    // iOS home-screen ("standalone") web apps stay suspended in memory and don't
+    // re-run the page on reopen, so a one-shot fetch would show a stale list forever.
+    // loadCatalog() is therefore callable on demand — by the 🔄 button and whenever
+    // the app returns to the foreground. Re-parsing then re-loading the saved snapshot
+    // keeps the user's ticks intact (persistence is keyed by item name, not position).
+    var refreshing = false;
+    function loadCatalog(opts) {
+      opts = opts || {};
+      if (refreshing) return Promise.resolve();
+      refreshing = true;
+      var btn = el("refresh-btn");
+      if (opts.manual && btn) btn.classList.add("spinning");
+      return fetch("master-list.txt?t=" + Date.now(), { cache: "no-store" })
+        .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+        .then(function (text) {
+          parseCatalog(text); loadSavedInto();
+          el("loading-state").classList.add("hidden");
+          el("shopping-list-groups").classList.remove("hidden");
+          render();
+          if (opts.manual) showToast("List up to date.", "info");
+        })
+        .catch(function (e) {
+          if (opts.manual) showToast("Couldn't refresh — check your connection.", "error");
+          else el("loading-state").innerHTML =
+            '<div style="font-size:32px;margin-bottom:8px">⚠️</div>' +
+            'Could not load the shopping list.<br>Check your connection and refresh.' +
+            '<br><br><small style="opacity:.6">' + esc(e.message) + "</small>";
+        })
+        .then(function () {
+          refreshing = false;
+          if (btn) btn.classList.remove("spinning");
+        });
+    }
+    loadCatalog();
+
+    el("refresh-btn").addEventListener("click", function () { loadCatalog({ manual: true }); });
+
+    // Auto-refresh when the home-screen app is brought back to the foreground, so an
+    // edited master-list.txt shows up without the user knowing to tap 🔄.
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "visible") loadCatalog();
+    });
 
     function parseCatalog(text) {
       var lines = text.split(/\r?\n/);

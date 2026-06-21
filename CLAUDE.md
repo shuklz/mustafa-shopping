@@ -57,6 +57,13 @@ than opening via `file://`, or the fetch will be blocked.
 - **"Other items"** (extras): user-added items not on the master list. The
   adder shows only on **All Items** and the **Others** tab. Extras are part of
   the shared message and the selected count like any checked item.
+- **Refreshing the catalog**: `loadCatalog()` fetches & re-parses `master-list.txt`
+  (no-store + cache-buster). It runs at startup, on the header **🔄 button**
+  (`{manual:true}` → spinner + toast), and on `visibilitychange` when the app
+  returns to the foreground. The foreground hook is the real fix for iOS
+  home-screen ("standalone") web apps, which stay suspended in memory and would
+  otherwise show a stale list forever. Re-parsing then `loadSavedInto()` preserves
+  ticks (saved by item name, not position).
 - **Sharing**: `buildMessage()` produces the WhatsApp-formatted text. Set
   `OWNER_WHATSAPP` (top of the script) to a number to send straight to a chat;
   leave `""` to pick the chat after tapping share.
