@@ -3,6 +3,7 @@ Onion
 Garlic
 Ginger
 Potato
+Sweet Potatot (purple)
 Tomato
 Carrot
 Radish
@@ -24,6 +25,8 @@ Parwal (Pointed gourd)
 Bitter gourd (Karela)
 Brinjal (Eggplant)
 Arbi (Taro root)
+Raw Banana
+Raw Papaya
 
 🍎 Fruits
 Apple
@@ -31,6 +34,7 @@ Avocado
 Papaya
 Mango
 Watermelon
+Pineapple
 Guava
 Fresh figs
 Assorted fruits for pooja
@@ -63,6 +67,7 @@ Flax seeds
 Chia seeds
 Sesame seeds
 Muri (Puffed rice)
+Makhana
 
 🧂 Spices & Seasonings
 Salt
