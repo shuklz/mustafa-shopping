@@ -300,28 +300,85 @@
     // Items with no sensible emoji just render without one. Trusted data, not user
     // input, so the emoji goes into innerHTML directly.
     var ITEM_ICONS = [
+    
       ["onion", "🧅"], ["garlic", "🧄"], ["ginger", "🫚"], ["potato", "🥔"],
+    
       ["tomato", "🍅"], ["carrot", "🥕"], ["cucumber", "🥒"], ["cabbage", "🥬"],
+    
       ["corn", "🌽"], ["capsicum", "🫑"], ["spinach", "🥬"], ["methi", "🌿"],
+    
       ["chilli", "🌶️"], ["brinjal", "🍆"], ["eggplant", "🍆"],
+    
       ["gourd", "🥒"], ["okra", "🥬"], ["bhindi", "🥬"],
+    
+      ["pumpkin", "🎃"],
+    
+      ["radish", "🥕"],
+    
+      ["beetroot", "🫜"],
+    
+      ["cauliflower", "🥦"],
+    
+      ["raw banana", "🍌"],
+    
+      ["raw papaya", "🍈"],
+    
+      ["arbi", "🥔"], ["taro root", "🥔"],
+    
       ["apple", "🍎"], ["avocado", "🥑"], ["mango", "🥭"], ["watermelon", "🍉"],
+    
+      ["papaya", "🍈"],
+    
+      ["guava", "🍐"],
+    
+      ["fresh figs", "🫐"], ["fig", "🫐"],
+    
+      ["blueberries", "🫐"], ["blueberry", "🫐"],
+    
       ["assorted", "🧺"],
+    
       ["daliya", "🌾"], ["channa dal", "🥣"], ["toor", "🥣"], ["moong", "🥣"],
+    
       ["dal", "🥣"], ["chickpea", "🫘"], ["channa", "🫘"], ["rajma", "🫘"],
+    
       ["peas", "🫛"], ["beans", "🫘"],
+    
       ["poha", "🍚"], ["rice", "🍚"], ["ragi", "🌾"],
+    
       ["atta", "🌾"], ["besan", "🌾"],
+    
       ["walnut", "🌰"], ["almond", "🌰"], ["cashew", "🌰"], ["raisin", "🍇"],
+    
       ["flax", "🌱"], ["chia", "🌱"], ["sesame", "🌱"],
-      ["salt", "🧂"], ["cumin", "🌿"], ["coriander", "🌿"],
+    
+      ["salt", "🧂"],
+    
+      ["amchur powder", "🧂"], ["amchur", "🧂"],
+    
+      ["cumin", "🌿"], ["coriander", "🌿"],
+    
       ["ghee", "🧈"], ["oil", "🫗"], ["jaggery", "🍯"], ["mishri", "🍬"],
-      ["tea", "☕"], ["horlicks", "🥛"],
+    
+      ["tea", "☕"],
+    
+      ["coffee", "☕"],
+    
+      ["coffe-3in1", "☕"], ["indocafe", "☕"],
+    
+      ["horlicks", "🥛"],
+    
       ["milk", "🥛"], ["bread", "🍞"], ["egg", "🥚"], ["yoghurt", "🥛"],
+    
       ["yogurt", "🥛"], ["paneer", "🧀"], ["cheese", "🧀"], ["butter", "🧈"],
+    
       ["rasmalai", "🍮"],
+    
       ["chips", "🍟"],
-      ["biscuit", "🍪"], ["noodle", "🍜"], ["pickle", "🥒"]
+    
+      ["biscuit", "🍪"], ["noodle", "🍜"], ["pickle", "🥒"],
+    
+      ["herbal toothpaste", "🪥"], ["toothpaste", "🪥"]
+    
     ];
     function itemIcon(name) {
       var n = String(name).toLowerCase();
