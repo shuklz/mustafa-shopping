@@ -15,6 +15,7 @@ Corn on the cob
 Beans
 Capsicum
 Spinach
+Spinach-Red(Red Saag)
 Methi leaves
 Coriander leaves
 Green chillies
@@ -27,6 +28,7 @@ Brinjal (Eggplant)
 Arbi (Taro root)
 Raw Banana
 Raw Papaya
+Pumpkin
 
 🍎 Fruits
 Apple
@@ -38,6 +40,7 @@ Pineapple
 Guava
 Fresh figs
 Assorted fruits for pooja
+Blueberries
 
 🌾 Pulses, Beans & Grains
 White peas
@@ -58,7 +61,7 @@ Aashirvaad Atta
 Besan
 
 🥜 Nuts, Seeds & Healthy Items
-Goundnuts
+Groundnuts
 Walnuts
 Almonds
 Cashews
@@ -106,3 +109,7 @@ Digestive biscuits
 Noodles
 Khichiya
 Pickles
+
+🍘 Body & Health
+Herbal toothpaste
+Optrex-Eye Cleaning sol.
