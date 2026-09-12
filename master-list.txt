@@ -13,6 +13,7 @@ Cabbage
 Cauliflower
 Corn on the cob
 Beans
+Beans-Long
 Capsicum
 Spinach
 Spinach-Red(Red Saag)
@@ -50,7 +51,7 @@ Channa dal
 Toor dal
 Green dal / Moong
 Rajma
-Brown rice
+Brown rice-DONT BUY
 Basmati rice
 Daliya
 Poha
@@ -79,6 +80,7 @@ Cumin seeds
 Coriander powder
 Ginger powder
 Amchur powder
+Red Chilli Powder
 
 🍯 Oils & Sweeteners
 Ghee
