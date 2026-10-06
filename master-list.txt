@@ -2,6 +2,7 @@
 Onion
 Garlic
 Ginger
+Lemons
 Potato
 Sweet Potatot (purple)
 Tomato
@@ -51,6 +52,7 @@ Chickpeas
 Channa dal
 Toor dal
 Green dal / Moong
+Masoor dal
 Rajma
 Brown rice-DONT BUY
 Basmati rice
@@ -78,9 +80,14 @@ Makhana
 Salt
 Black salt
 Cumin seeds
+Saunf/Fennel
+Cloves
+Black pepper whole
+Turmeric powder
 Coriander powder
 Ginger powder
 Amchur powder
+White pepper powder
 Red Chilli Powder
 
 🍯 Oils & Sweeteners
